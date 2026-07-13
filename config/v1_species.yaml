@@ -1,0 +1,53 @@
+{
+  "project": {
+    "name": "bird_translation_ai_v1",
+    "scope": "non_commercial_art_research",
+    "target_device": "raspberry_pi_5_class_linux_sbc"
+  },
+  "target_species": [
+    {
+      "label": "wood_pigeon",
+      "common_name": "Common Wood Pigeon",
+      "scientific_name": "Columba palumbus",
+      "birdnet_label_hint": "Common Wood Pigeon",
+      "notes": "Primary low-frequency prototype species for V1."
+    },
+    {
+      "label": "wren",
+      "common_name": "Eurasian Wren",
+      "scientific_name": "Troglodytes troglodytes",
+      "birdnet_label_hint": "Eurasian Wren",
+      "notes": "Primary high-energy prototype species for V1."
+    },
+    {
+      "label": "blackbird",
+      "common_name": "Common Blackbird",
+      "scientific_name": "Turdus merula",
+      "birdnet_label_hint": "Common Blackbird",
+      "notes": "Comparison species with broader known vocal variety for clustering checks."
+    },
+    {
+      "label": "house_sparrow",
+      "common_name": "House Sparrow",
+      "scientific_name": "Passer domesticus",
+      "birdnet_label_hint": "House Sparrow",
+      "notes": "Comparison species for a smaller, common urban vocalization set."
+    },
+    {
+      "label": "blue_tit",
+      "common_name": "Eurasian Blue Tit",
+      "scientific_name": "Cyanistes caeruleus",
+      "birdnet_label_hint": "Eurasian Blue Tit",
+      "notes": "Comparison species for a common UK high-frequency vocalization set."
+    }
+  ],
+  "allowed_recording_sources": [
+    "web",
+    "field"
+  ],
+  "allowed_splits": [
+    "train",
+    "val",
+    "test_field"
+  ]
+}

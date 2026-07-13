@@ -1,0 +1,5 @@
+cluster_id,manual_anchor_label,notes
+-1,call,Wren alarm-like residual behaves like the broader call family in this dataset
+0,song,Wren song cluster
+1,call,Wren call cluster
+2,call,Wren call subtype / narrow call cluster

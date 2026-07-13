@@ -1,0 +1,29 @@
+category,xc_id,why_selected
+song,1132965,Short UK adult song A quality
+song,1135232,Short UK adult song from different recordist
+song,507506,Very short UK adult song unseen style
+song,540362,UK song with clearer phrase structure
+song,1019693,Longer UK adult song from different recordist
+song,879393,UK song with missing stage metadata but clean A quality
+song,777055,UK territorial song example
+call,1088677,UK call A quality
+call,442999,Short UK call
+call,839227,UK hedgerow call series
+call,696805,UK call from pond-edge habitat
+call,955747,UK call in mixed habitat
+call,600669,UK clean call recording
+call,199964,UK call that current frontend struggles with
+call,824889,UK call unseen different recordist
+alarm,1044015,UK explicit alarm call reference
+alarm,448884,Alarm plus flight-call and rattle content
+alarm,799671,Adult alarm or rattle around chicks
+alarm,717599,Agitation or aggression-like call family
+alarm,798453,Adult call or rattle from different geography
+alarm,481873,Juvenile-labelled alarm/call edge case for robustness
+juvenile_begging,188029,UK juvenile begging call A quality
+juvenile_begging,807457,Juvenile call A quality different geography
+juvenile_begging,379435,Juvenile call A quality different recordist
+juvenile_begging,181392,UK juvenile call reference
+juvenile_begging,648801,Recently fledged juvenile high-pitched calls
+juvenile_begging,818851,Juvenile begging call with permissive CC0 license
+juvenile_begging,188239,Juvenile call different recordist

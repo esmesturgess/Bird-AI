@@ -1,0 +1,6 @@
+anchor_id,anchor_label,source_url,notes,audio_path
+blackbird_song_01,song,https://www.british-birdsongs.uk/blackbird/,"Use a clear adult blackbird song example. Treat subsong as song.",/absolute/path/to/song_example.wav
+blackbird_call_01,call,https://www.british-birdsongs.uk/blackbird/,"Use a short contact or general call example.",/absolute/path/to/call_example.wav
+blackbird_alarm_01,alarm,https://www.british-birdsongs.uk/blackbird/,"Use a sharp alarm or warning example.",/absolute/path/to/alarm_example.wav
+blackbird_juvenile_01,juvenile_begging,https://www.youtube.com/watch?v=9YThbrHB47E,"Juvenile or begging call example from the YouTube reference.",/absolute/path/to/juvenile_youtube_example.wav
+blackbird_juvenile_02,juvenile_begging,https://insighttimer.com/annaskoyles/video-guided-meditations/baby-blackbirds-in-england,"Juvenile or begging call example from the Insight Timer reference.",/absolute/path/to/juvenile_insighttimer_example.wav

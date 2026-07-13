@@ -1,0 +1,45 @@
+source_set,xc_id,assigned_bucket,sound_type_raw,stage_raw,country,quality,recordist,recording_url,why_selected,mapping_quality,mapping_note
+holdout_balanced_v1,401495,alarm,alarm call,nan,Germany,A,Fried N.,https://xeno-canto.org/401495,Unseen alarm call A quality different recordist,clean,raw label is a straightforward alarm call
+holdout_balanced_v1,647765,alarm,alarm call,nan,Ireland,A,Irish Wildlife Sounds,https://xeno-canto.org/647765,Unseen alarm call A quality different geography,clean,raw label is a straightforward alarm call
+holdout_balanced_v1,691506,alarm,alarm call,nan,Croatia,A,Domagoj Tomičić,https://xeno-canto.org/691506,Unseen alarm call A quality,clean,raw label is a straightforward alarm call
+holdout_balanced_v1,840417,alarm,alarm call,uncertain,Netherlands,A,Rob van Bemmelen,https://xeno-canto.org/840417,Unseen alarm call A quality different recordist,clean,raw label is a straightforward alarm call
+reference_pull_v2,1044015,alarm,"alarm call, call",uncertain,United Kingdom,B,David Cooper,https://xeno-canto.org/1044015,UK explicit alarm call reference,mixed,alarm bucket but raw sound_type mixes alarm with call / flight / rattle content
+reference_pull_v2,448884,alarm,"alarm call, call, flight call, outburst in flight and rattle",nan,France,A,Stanislas Wroza,https://xeno-canto.org/448884,Alarm plus flight-call and rattle content,mixed,alarm bucket but raw sound_type mixes alarm with call / flight / rattle content
+reference_pull_v2,481873,alarm,"alarm call, call",juvenile,United Kingdom,B,Andrew Harrop,https://xeno-canto.org/481873,Juvenile-labelled alarm/call edge case for robustness,mixed,alarm bucket but raw sound_type mixes alarm with call / flight / rattle content
+reference_pull_v2,799671,alarm,"alarm call, call, rattle",adult,Spain,A,Jacobo Ramil Millarengo,https://xeno-canto.org/799671,Adult alarm or rattle around chicks,mixed,alarm bucket but raw sound_type mixes alarm with call / flight / rattle content
+reference_pull_v2,717599,alarm,"call, agitation/agression calls",nan,Ireland,A,Irish Wildlife Sounds,https://xeno-canto.org/717599,Agitation or aggression-like call family,questionable,alarm bucket built from a neighboring behaviour label rather than explicit alarm
+reference_pull_v2,798453,alarm,"call, rattle",adult,Spain,A,Jacobo Ramil Millarengo,https://xeno-canto.org/798453,Adult call or rattle from different geography,questionable,alarm bucket built from a neighboring behaviour label rather than explicit alarm
+holdout_balanced_v1,1088672,call,call,uncertain,United Kingdom,B,David Darrell-Lambert,https://xeno-canto.org/1088672,UK pure call unseen short example,clean,raw label is a straightforward call
+holdout_balanced_v1,199964,call,call,nan,United Kingdom,B,Dawid Jablonski,https://xeno-canto.org/199964,UK pure call unseen different recordist,clean,raw label is a straightforward call
+holdout_balanced_v1,824889,call,call,nan,United Kingdom,B,Sidney Martin,https://xeno-canto.org/824889,UK pure call unseen different recordist,clean,raw label is a straightforward call
+holdout_balanced_v1,837713,call,call,nan,United Kingdom,B,Andrew Harrop,https://xeno-canto.org/837713,UK pure call unseen different recordist,clean,raw label is a straightforward call
+reference_pull_v2,1088677,call,call,uncertain,United Kingdom,A,David Darrell-Lambert,https://xeno-canto.org/1088677,UK call A quality,clean,raw label is a straightforward call
+reference_pull_v2,199964,call,call,nan,United Kingdom,B,Dawid Jablonski,https://xeno-canto.org/199964,UK call that current frontend struggles with,clean,raw label is a straightforward call
+reference_pull_v2,442999,call,call,nan,United Kingdom,B,Livia May,https://xeno-canto.org/442999,Short UK call,clean,raw label is a straightforward call
+reference_pull_v2,600669,call,call,nan,United Kingdom,B,Calum Mckellar,https://xeno-canto.org/600669,UK clean call recording,clean,raw label is a straightforward call
+reference_pull_v2,696805,call,call,nan,United Kingdom,B,Michał Jezierski,https://xeno-canto.org/696805,UK call from pond-edge habitat,clean,raw label is a straightforward call
+reference_pull_v2,824889,call,call,nan,United Kingdom,B,Sidney Martin,https://xeno-canto.org/824889,UK call unseen different recordist,clean,raw label is a straightforward call
+reference_pull_v2,839227,call,call,nan,United Kingdom,B,Andrew Harrop,https://xeno-canto.org/839227,UK hedgerow call series,clean,raw label is a straightforward call
+reference_pull_v2,955747,call,call,nan,United Kingdom,B,Mark Plummer,https://xeno-canto.org/955747,UK call in mixed habitat,clean,raw label is a straightforward call
+holdout_balanced_v1,798148,juvenile_begging,begging call,juvenile,United Kingdom,B,Grzegorz Lorek,https://xeno-canto.org/798148,UK juvenile begging unseen,clean,juvenile stage and begging sound_type align cleanly
+holdout_balanced_v1,921493,juvenile_begging,begging call,juvenile,United Kingdom,B,Paul Driver,https://xeno-canto.org/921493,UK juvenile begging unseen,clean,juvenile stage and begging sound_type align cleanly
+holdout_balanced_v1,930984,juvenile_begging,begging call,juvenile,France,B,Camille Vacher,https://xeno-canto.org/930984,Juvenile begging unseen different recordist,clean,juvenile stage and begging sound_type align cleanly
+reference_pull_v2,188029,juvenile_begging,"begging call, call",juvenile,United Kingdom,A,david m,https://xeno-canto.org/188029,UK juvenile begging call A quality,clean,juvenile stage and begging sound_type align cleanly
+reference_pull_v2,648801,juvenile_begging,"begging call, call",juvenile,Netherlands,B,Peter van Vlaardingen,https://xeno-canto.org/648801,Recently fledged juvenile high-pitched calls,clean,juvenile stage and begging sound_type align cleanly
+reference_pull_v2,818851,juvenile_begging,"begging call, call",juvenile,France,B,Sonothèque ADVL,https://xeno-canto.org/818851,Juvenile begging call with permissive CC0 license,clean,juvenile stage and begging sound_type align cleanly
+holdout_balanced_v1,807457,juvenile_begging,call,juvenile,France,A,Dominique Guillerme,https://xeno-canto.org/807457,Juvenile unseen different geography,mixed,juvenile stage is clear but sound_type is only generic call
+reference_pull_v2,181392,juvenile_begging,call,juvenile,United Kingdom,B,Dawid Jablonski,https://xeno-canto.org/181392,UK juvenile call reference,mixed,juvenile stage is clear but sound_type is only generic call
+reference_pull_v2,188239,juvenile_begging,call,juvenile,France,B,Michele Peron,https://xeno-canto.org/188239,Juvenile call different recordist,mixed,juvenile stage is clear but sound_type is only generic call
+reference_pull_v2,379435,juvenile_begging,call,juvenile,Germany,A,Franz Lindinger,https://xeno-canto.org/379435,Juvenile call A quality different recordist,mixed,juvenile stage is clear but sound_type is only generic call
+reference_pull_v2,807457,juvenile_begging,call,juvenile,France,A,Dominique Guillerme,https://xeno-canto.org/807457,Juvenile call A quality different geography,mixed,juvenile stage is clear but sound_type is only generic call
+holdout_balanced_v1,1019693,song,song,adult,United Kingdom,A,He Wenjin/文进,https://xeno-canto.org/1019693,UK adult song unseen different recordist,clean,raw label is a straightforward song
+holdout_balanced_v1,1120697,song,song,adult,United Kingdom,A,David Darrell-Lambert,https://xeno-canto.org/1120697,UK adult song unseen different recordist,clean,raw label is a straightforward song
+holdout_balanced_v1,507506,song,song,adult,United Kingdom,A,Aurora Gonzalo-Tarodo,https://xeno-canto.org/507506,UK adult song A quality short unseen example,clean,raw label is a straightforward song
+holdout_balanced_v1,879393,song,song,nan,United Kingdom,A,Mark Plummer,https://xeno-canto.org/879393,UK song unseen different recordist,clean,raw label is a straightforward song
+reference_pull_v2,1019693,song,song,adult,United Kingdom,A,He Wenjin/文进,https://xeno-canto.org/1019693,Longer UK adult song from different recordist,clean,raw label is a straightforward song
+reference_pull_v2,1132965,song,song,adult,United Kingdom,A,Ben Crabb,https://xeno-canto.org/1132965,Short UK adult song A quality,clean,raw label is a straightforward song
+reference_pull_v2,1135232,song,song,adult,United Kingdom,A,David Darrell-Lambert,https://xeno-canto.org/1135232,Short UK adult song from different recordist,clean,raw label is a straightforward song
+reference_pull_v2,507506,song,song,adult,United Kingdom,A,Aurora Gonzalo-Tarodo,https://xeno-canto.org/507506,Very short UK adult song unseen style,clean,raw label is a straightforward song
+reference_pull_v2,540362,song,song,adult,United Kingdom,A,Graham Wallis,https://xeno-canto.org/540362,UK song with clearer phrase structure,clean,raw label is a straightforward song
+reference_pull_v2,777055,song,song,adult,United Kingdom,A,Fraser Simpson,https://xeno-canto.org/777055,UK territorial song example,clean,raw label is a straightforward song
+reference_pull_v2,879393,song,song,nan,United Kingdom,A,Mark Plummer,https://xeno-canto.org/879393,UK song with missing stage metadata but clean A quality,clean,raw label is a straightforward song

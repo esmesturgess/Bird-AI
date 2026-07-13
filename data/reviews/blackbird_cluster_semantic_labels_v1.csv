@@ -1,0 +1,12 @@
+cluster_id,manual_anchor_label,notes
+0,alarm,User review: cluster 0 is alarm call
+1,alarm,User review confirmed alarm
+2,alarm,User review: cluster 2 is alarm
+3,song,User review confirmed song
+4,alarm,User review: cluster 4 is alarm
+5,call,User review: cluster 5 is call
+6,song,User review confirmed song
+7,song,User review confirmed song
+8,song,User review confirmed song
+9,song,User review confirmed song
+10,song,User review confirmed song

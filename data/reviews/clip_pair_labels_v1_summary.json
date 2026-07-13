@@ -1,0 +1,12 @@
+{
+  "label_counts": {
+    "different": 1376,
+    "same": 913
+  },
+  "n_clip_pairs": 2289,
+  "n_species": 4,
+  "pair_source_counts": {
+    "manual_cross_cluster_review": 1776,
+    "within_cluster_positive": 513
+  }
+}

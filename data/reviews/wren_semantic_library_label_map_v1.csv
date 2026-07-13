@@ -1,0 +1,5 @@
+source_label,library_label,notes
+alarm,call,Wren alarm-like calls are merged into the broader call family
+call,call,Wren call family
+juvenile_begging,juvenile_begging,Keep juvenile as a reference-supported bucket even if no observed clips are assigned yet
+song,song,Wren song family

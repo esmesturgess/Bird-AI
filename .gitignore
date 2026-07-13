@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# OS
+.DS_Store
+
+# Generated pipeline artifacts (real outputs live on Google Drive per STORAGE_POLICY.md)
+data/raw/
+data/events/
+data/preds/
+data/features/
+data/specs/
+data/embeddings/
+data/clusters/
+data/reports/
+data/runs/
+data/manifests/events_manifest.csv
+
+# Colab bundle output
+colab/dist/
