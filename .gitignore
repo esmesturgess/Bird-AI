@@ -21,3 +21,10 @@ data/manifests/events_manifest.csv
 
 # Colab bundle output
 colab/dist/
+
+# local secrets (API keys etc.)
+.env
+*.env
+
+# local editor / assistant config
+.claude/

@@ -2,6 +2,25 @@
 
 This repo implements a first end-to-end baseline for exploratory bird-vocalization sonification workflows.
 
+## ▶ Run the demo on the Intel NUC (or any x86 Linux box)
+
+Pull this from GitHub and run the "bird sound in → spoken species out" demo:
+
+```bash
+git clone https://github.com/esmesturgess/Bird-AI.git
+cd Bird-AI
+bash scripts/setup_nuc.sh                      # installs venv, deps, espeak-ng, BirdNET
+# copy a blackbird clip onto the box, then:
+./.venv/bin/python scripts/infer_clip.py --clip <clip.wav> --speak
+```
+
+It detects the species and **says it aloud** (e.g. "Blackbird"). Full step-by-step,
+what to copy over, and troubleshooting: **[scripts/README_NUC.md](scripts/README_NUC.md)**.
+The trimmed runtime dependencies are in `requirements-deploy.txt`.
+
+> Status: species detection works end-to-end. The call-type step ("Blackbird → alarm")
+> is scaffolded but not yet accurate — see `CLAUDE.md`.
+
 If you are re-entering the project and want the quickest accurate overview first, start with:
 
 - [PROJECT_REBRIEF.md](/Users/esmesturgess/Bird%20Translation%20AI/PROJECT_REBRIEF.md)

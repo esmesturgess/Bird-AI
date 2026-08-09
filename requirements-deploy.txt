@@ -1,0 +1,15 @@
+# Trimmed runtime deps for the live/demo device (Intel NUC, x86 Linux).
+# Inference + playback only — NOT the offline clustering/training/reporting stack.
+# Install birdnet-analyzer separately (pulls tensorflow, kagglehub, etc.):
+#     pip install "birdnet-analyzer[embeddings]"
+# Excluded vs requirements.txt: umap-learn, hdbscan, matplotlib, jinja2 (offline-only).
+numpy>=1.26
+scipy>=1.12
+librosa>=0.10
+soundfile>=0.12
+pandas>=2.2
+scikit-learn>=1.4
+tqdm>=4.66
+ml-collections>=0.1
+perch-hoplite>=0.1.1
+torch>=2.11
