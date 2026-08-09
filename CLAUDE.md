@@ -311,6 +311,32 @@ a nearest-prototype call in the `# milestone 1 hook`. Output would SAY a call-ty
 would be UNRELIABLE (the unsolved label problem). Milestone 2 = full install loop
 (play->classify->trigger 2nd speaker), not built.
 
+## Mic PoC (2026-08-09) — plan + recorder
+
+`MIC_POC_PLAN.md` is the plan for a bench PoC on the x86 Linux box: **mic in -> species ->
+play a mapped response clip**. Note this deliberately reintroduces the microphone that the
+live-installation decision above dropped — it is a bench test of whether BirdNET survives
+real acoustic audio in a real room, NOT a reversal of the installation design. Feedback
+(response audio retriggering the mic) is handled by muting input during playback + cooldown.
+Scope is **species only** — no call-type, per the unsolved label problem.
+
+**BUILT and tested:** `src/live_audio.py` (capture primitives) + `scripts/record_clip.py`
+(CLI). Modes: `--list_devices`, `--meter` (noise floor + suggested VOX threshold),
+`--seconds` (fixed clip), `--auto` (sound-activated, one file per event), `--analyse`
+(chains into `infer_clip.py`). Writes 48 kHz mono PCM_16 to `data/raw/mic_recordings/`
+(gitignored) + `recordings_log.csv` of per-clip levels. Verified on real hardware (Mac
+built-in mic) and by unit tests on synthetic audio; NOT yet run on the NUC with a USB mic.
+
+Design points worth not relitigating: capture at the device's native rate and resample
+once at save time via scipy `resample_poly` (per-block resampling would leave a
+discontinuity at every block boundary; scipy avoids dragging librosa/numba into the live
+runtime). Recordings are saved WITHOUT peak normalization — absolute level is what the
+energy gate is calibrated against. `requirements-deploy.txt` gained `sounddevice`;
+`setup_nuc.sh` gained `libportaudio2 portaudio19-dev`.
+
+Still to build (see plan stages 2-4): `src/live_species.py`, `src/live_respond.py`,
+`scripts/live_demo.py`, `config/response_map.yaml`.
+
 ## Working notes
 
 - Git repo initialized 2026-07-13 (root commit `f439c9d`, branch `master`). `.gitignore`
