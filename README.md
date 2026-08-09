@@ -2,6 +2,25 @@
 
 This repo implements a first end-to-end baseline for exploratory bird-vocalization sonification workflows.
 
+
+# 1. the stack works at all (should speak "Blackbird")
+./.venv/bin/python scripts/infer_clip.py --clip <a-blackbird-clip>.mp3 --speak
+
+# 2. the kernel sees your USB mic
+arecord -l
+
+# 3. Python sees it too
+./.venv/bin/python scripts/record_clip.py --list_devices
+
+# 4. measure the room, get a real threshold
+./.venv/bin/python scripts/record_clip.py --meter --device usb
+
+# 5. the actual Stage 1 measurement — play a blackbird clip at the mic
+./.venv/bin/python scripts/record_clip.py --seconds 5 --device usb --analyse
+Step 1 needs an audio clip, and data/ travels by neither route — so scp one blackbird file over separately.
+
+Step 5 is the number that matters. It will be well below the 0.995 you get from a file, and how far below sets the thresholds for the whole PoC.
+
 ## ▶ Run the demo on the Intel NUC (or any x86 Linux box)
 
 Pull this from GitHub and run the "bird sound in → spoken species out" demo:
