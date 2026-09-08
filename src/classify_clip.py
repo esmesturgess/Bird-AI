@@ -100,33 +100,49 @@ class Classifier:
         return ranked[0][0], ranked[0][1]
 
     # ---------- stage 2: what kind of sound ----------
-    def _embed(self, y: np.ndarray, wav_path: Path) -> np.ndarray:
-        import torch
-        with torch.no_grad():
-            out = self._aves(torch.from_numpy(y.astype(np.float32)).unsqueeze(0))
-        av = (out.mean(dim=1) if out.ndim == 3 else out).squeeze(0).numpy()
-
-        from .embed import birdnet_embedding_array
+    # The heads were trained on ~6 s PHRASE UNITS and evaluated by averaging the prototype
+    # similarities across all units in a recording. Embedding a whole 25 s clip as one
+    # vector is a distribution mismatch and measurably worse (54% vs ~80% on a check of 72
+    # clips, 2026-09-08). So: split into phrase-length windows, embed each, and average.
+    def _embed_windows(self, y: np.ndarray, window_s: float, hop_s: float) -> np.ndarray:
+        import torch, shutil, soundfile as sf
         import pandas as pd
-        with tempfile.TemporaryDirectory(prefix="clf_") as td:
-            import shutil
-            shutil.copy2(wav_path, Path(td) / wav_path.name)
-            bn, _meta = birdnet_embedding_array(
-                pd.DataFrame([{"event_wav": wav_path.name}]), events_dir=Path(td),
-                binary=self.birdnet_binary.replace("analyze", "embeddings"))
-        return np.concatenate([_l2(av), _l2(bn[0])]).astype(np.float32)
+        w, h = int(window_s * SR), int(hop_s * SR)
+        starts = list(range(0, max(len(y) - w, 0) + 1, h)) or [0]
+        chunks = [y[s:s + w] for s in starts]
+        chunks = [c for c in chunks if len(c) >= SR]          # skip stubs under a second
 
-    def classify(self, wav_path: Path, min_species_conf: float = 0.10) -> Result:
+        avs = []
+        for c in chunks:
+            with torch.no_grad():
+                o = self._aves(torch.from_numpy(c.astype(np.float32)).unsqueeze(0))
+            avs.append((o.mean(dim=1) if o.ndim == 3 else o).squeeze(0).numpy())
+
+        # one batched BirdNET call for every window — far cheaper than one call per window
+        from .embed import birdnet_embedding_array
+        with tempfile.TemporaryDirectory(prefix="clf_") as td:
+            names = []
+            for i, c in enumerate(chunks):
+                n = f"w{i:03d}.wav"
+                sf.write(Path(td) / n, c, SR)
+                names.append(n)
+            bn, _meta = birdnet_embedding_array(
+                pd.DataFrame([{"event_wav": n} for n in names]), events_dir=Path(td),
+                binary=self.birdnet_binary.replace("analyze", "embeddings"))
+        return np.stack([np.concatenate([_l2(a), _l2(b)]) for a, b in zip(avs, bn)]).astype(np.float32)
+
+    def classify(self, wav_path: Path, min_species_conf: float = 0.10,
+                 window_s: float = 6.0, hop_s: float = 3.0) -> Result:
         import librosa
         sci, conf = self.detect_species(Path(wav_path), min_species_conf)
         if sci is None:
             return Result(None, None, conf, None, 0.0)
         slug = COMMON_NAMES[sci]
         y = librosa.load(str(wav_path), sr=SR, mono=True)[0]
-        feat = self._embed(y, Path(wav_path))
+        feats = self._embed_windows(y, window_s, hop_s)
         head = self.heads[slug]
         with self._torch.no_grad():
-            z = head["model"](self._torch.tensor(feat).unsqueeze(0)).numpy()[0]
-        sims = _l2(z) @ head["prototypes"].T
+            z = head["model"](self._torch.tensor(feats)).numpy()
+        sims = (_l2(z) @ head["prototypes"].T).mean(axis=0)   # aggregate, as in the evaluation
         i = int(sims.argmax())
         return Result(slug, sci, conf, head["labels"][i], float(sims[i]))
