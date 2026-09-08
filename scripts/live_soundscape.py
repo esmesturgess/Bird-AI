@@ -53,6 +53,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--left_only", action="store_true", help="soundscape on the left channel only")
     p.add_argument("--dry_run", action="store_true", help="classify and print, play nothing")
     p.add_argument("--no_speak", action="store_true")
+    p.add_argument("--talk_over", action="store_true",
+                   help="answer while the bird is still playing, instead of waiting for it to finish")
     return p.parse_args()
 
 
@@ -119,12 +121,17 @@ def main() -> None:
                     continue
 
                 out = seg if not args.left_only else np.column_stack([seg, np.zeros_like(seg)])
-                sd.play(out, SR)
-                print(f"[{i*args.segment_seconds:6.0f}s] {res.spoken():24s} "
+                print(f"[{i*args.segment_seconds:6.0f}s] ♪ {res.spoken():24s} "
                       f"species {res.species_confidence:.2f} · match {res.vocalisation_confidence:.2f}", flush=True)
-                if not args.no_speak:
-                    speak(res.spoken())               # Speaker B (TTS placeholder)
-                sd.wait()
+                sd.play(out, SR)
+                if args.talk_over:
+                    if not args.no_speak:
+                        speak(res.spoken())           # answer while the bird is still singing
+                    sd.wait()
+                else:
+                    sd.wait()                         # let the bird finish, THEN answer
+                    if not args.no_speak:
+                        speak(res.spoken())
 
             stop.set()
             if not args.loop:
