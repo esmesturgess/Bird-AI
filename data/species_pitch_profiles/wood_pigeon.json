@@ -1,0 +1,15 @@
+{
+  "category_median_f0_hz": {
+    "all": 516.1417901212174
+  },
+  "category_n_clips_used": {
+    "all": 14
+  },
+  "is_reference_species": false,
+  "note": "semitone_shift_vs_reference is ONE species-level number (median across categories, not clips) meant to be applied uniformly to whichever response track this species triggers. Reference is another SPECIES (see reference_species_slug), not a fixed musical pitch -- see module docstring.",
+  "reference_hz": 2184.301122044646,
+  "reference_species_slug": "blackbird",
+  "semitone_shift_vs_reference": -24.97598887090419,
+  "species_median_f0_hz": 516.1417901212174,
+  "species_slug": "wood_pigeon"
+}

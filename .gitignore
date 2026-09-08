@@ -22,9 +22,13 @@ data/manifests/events_manifest.csv
 # Colab bundle output
 colab/dist/
 
+# Personal recordings of copyrighted response sounds — never commit these
+data/response_sounds/
+
 # local secrets (API keys etc.)
 .env
 *.env
 
 # local editor / assistant config
 .claude/
+data/reviews/robin_listening_test_v1/audio/

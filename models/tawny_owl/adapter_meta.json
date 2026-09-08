@@ -1,0 +1,40 @@
+{
+  "artifact_type": "embedding_adapter",
+  "aves2_npy": "data/runs/aves2_embeddings/owl_full_aves2.npy",
+  "checkpoint_path": "data/runs/tawny_owl_supcon_adapter_v1/adapter.pt",
+  "class_counts": {
+    "alarm": 383,
+    "call": 1030,
+    "juvenile": 1667,
+    "song": 949
+  },
+  "classes": [
+    "alarm",
+    "call",
+    "juvenile",
+    "song"
+  ],
+  "embedding_sources": [
+    "aves2",
+    "birdnet"
+  ],
+  "hyperparameters": {
+    "batch_per_class": 16,
+    "dropout": 0.1,
+    "hidden_dim": 512,
+    "iterations": 400,
+    "lr": 0.001,
+    "output_dim": 128,
+    "seed": 42,
+    "temperature": 0.1,
+    "weight_decay": 0.0001
+  },
+  "input_layout": "L2(aves2_768) || L2(birdnet_1024)",
+  "label_column": "call_type_ground_truth",
+  "labels_csv": "data/raw/owl_combined_v1/call_type_ground_truth.csv",
+  "loss": "supcon",
+  "n_clips": 4029,
+  "note": "train_set_accuracy is NOT a generalization estimate; see nested-CV eval in CLAUDE.md.",
+  "pattern_run_dir": "data/runs/owl_pattern_layer",
+  "train_set_accuracy_sanity_check": 0.9913129808885579
+}

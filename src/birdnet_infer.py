@@ -18,7 +18,10 @@ class BirdNETConfig:
     binary: str = "birdnet-analyze"
     top_k: int = 5
     model_dir: Path | None = None
-    timeout_s: int = 120
+    timeout_s: int = 1800  # was 120s; too short once a full-recording-frontend batch's
+    # combined audio duration grows large (confirmed 2026-08-12: 372-file/354-minute batch
+    # silently timed out and returned empty results -- the timeout error was swallowed by
+    # the caller). See also: pipeline.py now surfaces batch_err instead of hiding it.
 
 
 def ensure_birdnet_available(binary: str) -> None:

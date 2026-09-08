@@ -72,3 +72,40 @@ class PairContrastiveLoss(nn.Module):
         positive = labels * (1.0 - cos)
         negative = (1.0 - labels) * F.relu(cos - self.margin)
         return (positive + negative).mean()
+
+
+class SupConLoss(nn.Module):
+    """
+    Supervised Contrastive Loss (Khosla et al. 2020, the "SupCon-out" formulation).
+
+    Operates on a whole batch of L2-normalized embeddings with integer class labels.
+    For each anchor, every other same-class item in the batch is a positive and every
+    different-class item is a negative, compared via a temperature-scaled softmax over
+    the full batch at once (not one pair at a time). This is more sample-efficient than
+    the pairwise objective, which matters for scarce classes.
+
+    Validated 2026-08-13 to beat PairContrastiveLoss on all Blackbird call-type categories
+    (see CLAUDE.md); this is the same implementation, promoted from the eval scratchpad.
+    """
+
+    def __init__(self, temperature: float = 0.1) -> None:
+        require_torch()
+        super().__init__()
+        self.temperature = float(temperature)
+
+    def forward(self, z, labels):  # type: ignore[override]
+        # z: (N, D) already L2-normalized (EmbeddingAdapter normalizes its output).
+        n = z.shape[0]
+        labels = labels.view(-1, 1)
+        same = torch.eq(labels, labels.T).float()
+        not_self = 1.0 - torch.eye(n, device=z.device)
+        pos_mask = same * not_self
+
+        sim = (z @ z.T) / self.temperature
+        sim = sim - sim.max(dim=1, keepdim=True).values.detach()  # numerical stability
+        exp_sim = torch.exp(sim) * not_self  # exclude self from the denominator
+        log_prob = sim - torch.log(exp_sim.sum(1, keepdim=True) + 1e-12)
+
+        pos_count = pos_mask.sum(1).clamp(min=1e-12)
+        mean_log_prob_pos = (pos_mask * log_prob).sum(1) / pos_count
+        return (-mean_log_prob_pos).mean()

@@ -1,0 +1,19 @@
+{
+  "category_median_f0_hz": {
+    "alarm": 4968.55408885059,
+    "call": 5789.940612393562,
+    "song": 4006.2940031035196
+  },
+  "category_n_clips_used": {
+    "alarm": 12,
+    "call": 12,
+    "song": 12
+  },
+  "is_reference_species": false,
+  "note": "semitone_shift_vs_reference is ONE species-level number (median across categories, not clips) meant to be applied uniformly to whichever response track this species triggers. Reference is another SPECIES (see reference_species_slug), not a fixed musical pitch -- see module docstring.",
+  "reference_hz": 2184.301122044646,
+  "reference_species_slug": "blackbird",
+  "semitone_shift_vs_reference": 14.227851773950032,
+  "species_median_f0_hz": 4968.55408885059,
+  "species_slug": "robin"
+}

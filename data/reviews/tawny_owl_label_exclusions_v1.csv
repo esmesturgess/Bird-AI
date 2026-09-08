@@ -1,0 +1,18 @@
+recording_id,excluded_category,reason
+XC533359_Strix_aluco,juvenile,"mixed content: raw='begging call, call, song' — song passage would train as juvenile"
+XC359110_Strix_aluco,juvenile,"mixed content: raw='begging call, song' — song passage would train as juvenile"
+XC1107313_Strix_aluco,alarm,"mixed content: raw='alarm call, song' — song passage would train as alarm"
+XC855201_Strix_aluco,alarm,"mixed content: raw='alarm call, call, song, exitement-call' — song passage would train as alarm"
+XC844254_Strix_aluco,alarm,"mixed content: raw='aberrant, alarm call, call, song' — song passage would train as alarm"
+XC842974_Strix_aluco,alarm,"mixed content: raw='alarm call, call, subsong' — song passage would train as alarm"
+XC786308_Strix_aluco,alarm,"mixed content: raw='alarm call, song' — song passage would train as alarm"
+XC781070_Strix_aluco,alarm,"mixed content: raw='alarm call, call, song, squeaky call, rolled song' — song passage would train as alarm"
+XC696765_Strix_aluco,alarm,"mixed content: raw='alarm call, call, flight call, nocturnal flight call, song' — song passage would train as alarm"
+XC623709_Strix_aluco,alarm,"mixed content: raw='alarm call, call, song' — song passage would train as alarm"
+XC583422_Strix_aluco,alarm,"mixed content: raw='alarm call, song' — song passage would train as alarm"
+XC436119_Strix_aluco,alarm,"mixed content: raw='alarm call, call, song' — song passage would train as alarm"
+XC419877_Strix_aluco,juvenile,"mixed content: raw='alarm call, begging call, call, flight call, song, vario' — song passage would train as juvenile"
+XC419876_Strix_aluco,juvenile,"mixed content: raw='alarm call, begging call, call, flight call, song, vario' — song passage would train as juvenile"
+XC891442_Strix_aluco,alarm,"mixed content: raw='alarm call, song' — song passage would train as alarm"
+XC542166_Strix_aluco,alarm,"mixed content: raw='alarm call, song' — song passage would train as alarm"
+XC293572_Strix_aluco,juvenile,mixed content: raw='song' — song passage would train as juvenile

@@ -39,6 +39,20 @@
       "scientific_name": "Cyanistes caeruleus",
       "birdnet_label_hint": "Eurasian Blue Tit",
       "notes": "Comparison species for a common UK high-frequency vocalization set."
+    },
+    {
+      "label": "robin",
+      "common_name": "European Robin",
+      "scientific_name": "Erithacus rubecula",
+      "birdnet_label_hint": "European Robin",
+      "notes": "Chosen 2026-08-29 by measured song-vs-rest separability: a melodic sustained song against sharp 'tic' calls is the maximum song/call acoustic contrast among common British birds, which is the property that made Blackbird work and Wren fail."
+    },
+    {
+      "label": "tawny_owl",
+      "common_name": "Tawny Owl",
+      "scientific_name": "Strix aluco",
+      "birdnet_label_hint": "Tawny Owl",
+      "notes": "Chosen 2026-09-03 for maximum sonic contrast with the two warblers (low nocturnal hooting) AND because it is the first species with real juvenile depth (~700 EU recordings). NOTE: song=male hoot, call=female kewick are largely sex-linked for this species - accepted as legitimate vocal types by user decision, but the accuracy figure means something subtly different than for Robin/Blackbird."
     }
   ],
   "allowed_recording_sources": [

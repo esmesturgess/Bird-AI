@@ -795,6 +795,8 @@ def run_birdnet_window_frontend(
         min_conf=0.0,
         merge_consecutive=merge_consecutive,
     )
+    if batch_err:
+        print(f"WARNING: BirdNET full-recording frontend reported an error: {batch_err}")
 
     event_rows: list[dict[str, object]] = []
     pred_rows: list[dict[str, object]] = []
