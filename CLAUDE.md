@@ -1451,6 +1451,24 @@ a nearest-prototype call in the `# milestone 1 hook`. Output would SAY a call-ty
 would be UNRELIABLE (the unsolved label problem). Milestone 2 = full install loop
 (play->classify->trigger 2nd speaker), not built.
 
+## The mic PoC's blocker is now RESOLVED (2026-09-08)
+
+`MIC_POC_PLAN.md` scoped itself to **species only**, explicitly "no call-type, per the
+unsolved label problem". **That problem is now solved.** Three species heads exist in
+`models/` (blackbird, robin, tawny_owl) at ~0.80 nested-CV accuracy, so the PoC's
+`species -> response` map can become `species + vocalisation type -> response`, i.e. 12
+combinations rather than 3.
+
+`src/classify_clip.py` is the shared inference core for this: it holds both frozen encoders
+warm and returns `(species, vocalisation, confidences)`. Use it for the PoC's still-to-build
+`src/live_species.py` / `src/live_respond.py` rather than writing a second inference path.
+`scripts/live_soundscape.py` is the MIC-LESS installation runtime (plays a soundscape and
+classifies its own buffer, pipelined so segment N+1 is classified while N plays).
+
+The two paths deliberately coexist: the mic PoC is a bench test of whether BirdNET survives
+real room acoustics; the soundscape runtime is the exhibition design. Both call the same
+classifier.
+
 ## Mic PoC (2026-08-09) — plan + recorder
 
 `MIC_POC_PLAN.md` is the plan for a bench PoC on the x86 Linux box: **mic in -> species ->

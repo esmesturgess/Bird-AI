@@ -6,7 +6,7 @@
 # sounddevice also needs the PortAudio system library (see scripts/setup_nuc.sh).
 numpy>=1.26
 scipy>=1.12
-sounddevice>=0.4
+sounddevice>=0.4        # playback + mic capture; Linux also needs libportaudio2
 librosa>=0.10
 soundfile>=0.12
 pandas>=2.2
@@ -21,4 +21,3 @@ torch>=2.11
 # It downloads a ~400 MB checkpoint to ~/.cache/esp on first run — do this BEFORE the
 # exhibition, not on the night.
 avex>=1.3
-sounddevice>=0.4        # playback; on Linux also: sudo apt install libportaudio2
