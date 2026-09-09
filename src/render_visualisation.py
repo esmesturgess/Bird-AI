@@ -68,7 +68,7 @@ def decision_lines(seg: int, species_sci: str, species_slug: str | None, voc: st
     L: list[tuple[float, str]] = [
         (0.02, f"$ classify --segment {seg:02d}"),
         (0.08, f"  {species_sci:<18s} {species_conf:.2f}"),
-        (0.55, "  nearest prototype:"),
+        (0.55, "  Nearest vocalisation type:"),
     ]
     t = 0.60
     for k in order:
