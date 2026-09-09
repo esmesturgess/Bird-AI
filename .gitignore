@@ -32,3 +32,5 @@ data/response_sounds/
 # local editor / assistant config
 .claude/
 data/reviews/robin_listening_test_v1/audio/
+data/soundscapes/**/.DS_Store
+.DS_Store
