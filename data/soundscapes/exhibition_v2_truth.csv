@@ -1,0 +1,13 @@
+segment,start_s,species,vocalisation,source
+0,0.0,robin,juvenile,robin_juvenile_rbjuv_XC662392_Erithacus_rubecula.wav
+1,25.0,blackbird,juvenile,blackbird_juvenile_bbjuv_ML558054881.wav
+2,50.0,tawny_owl,song,tawny_owl_song_XC1018926_Strix_aluco.wav
+3,75.0,blackbird,song,blackbird_song_XC788912_Turdus_merula.wav
+4,100.0,robin,call,robin_call_call_286052401.wav
+5,125.0,robin,alarm,robin_alarm_alarm_278939011.wav
+6,150.0,blackbird,call,blackbird_call_XC864640_Turdus_merula.wav
+7,175.0,tawny_owl,call,tawny_owl_call_XC1009577_Strix_aluco.wav
+8,200.0,robin,song,robin_song_song_245150581.wav
+9,225.0,tawny_owl,juvenile,tawny_owl_juvenile_XC1075076_Strix_aluco.wav
+10,250.0,tawny_owl,alarm,tawny_owl_alarm_XC1088119_Strix_aluco.wav
+11,275.0,blackbird,alarm,blackbird_alarm_XC864280_Turdus_merula.wav
