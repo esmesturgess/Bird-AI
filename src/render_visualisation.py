@@ -31,6 +31,7 @@ MARGIN = 46
 SPEC_TOP, SPEC_BOT = 88, 368
 TERM_TOP = 414
 LINE_H = 19
+BAR_CELLS, BAR_START, BAR_END = 34, 0.12, 0.52
 VERDICT_Y = 652   # fixed, so a long log can never push it off-screen
 FONT_PATH = "/System/Library/Fonts/Menlo.ttc"
 
@@ -63,15 +64,10 @@ def decision_lines(seg: int, species: str, voc: str, sims: dict[str, float],
     order = sorted(sims, key=lambda k: -sims[k])
     L: list[tuple[float, str]] = [
         (0.02, f"$ classify --segment {seg:02d}"),
-        (0.08, "  read audio ................ 25.0 s @ 16 kHz"),
-        (0.16, f"  birdnet species scan ...... {species:<14s} {species_conf:.2f}"),
-        (0.26, "  birdnet embedding ......... 1024-d"),
-        (0.33, "  aves embedding ............ 768-d"),
-        (0.39, "  concatenate ............... 1792-d"),
-        (0.46, "  projection head ........... 128-d"),
-        (0.53, "  nearest prototype:"),
+        (0.08, f"  {species:<18s} {species_conf:.2f}"),
+        (0.55, "  nearest prototype:"),
     ]
-    t = 0.58
+    t = 0.60
     for k in order:
         bar = "#" * int(round(sims[k] * 34))
         mark = "<--" if k == voc else "   "
@@ -152,7 +148,7 @@ def main() -> None:
 
     for si, seg in enumerate(segments):
         d, lines = info[si], logs[si]
-        head = f"{d['species'].replace('_',' ').upper()}  /  {(d['voc'] or '-').upper()}"
+        head = f"{d['species'].replace('_',' ').upper()}  |  {(d['voc'] or '-').upper()}"
         for f in range(frames_per_seg):
             prog = f / frames_per_seg
             im = Image.new("L", (W, H), 0)
@@ -174,12 +170,18 @@ def main() -> None:
                 if prog >= frac:
                     dr.text((MARGIN, y), text, font=F_MD, fill=205)
                     y += LINE_H
+                if frac == 0.08 and prog >= BAR_START:      # the bar sits under the read line
+                    fill_frac = min(1.0, (prog - BAR_START) / (BAR_END - BAR_START))
+                    done = int(round(fill_frac * BAR_CELLS))
+                    bar = "\u2588" * done + "\u2591" * (BAR_CELLS - done)
+                    dr.text((MARGIN, y), f"  [{bar}] {fill_frac*100:3.0f}%", font=F_MD, fill=205)
+                    y += LINE_H
             if prog >= 0.86:
                 dr.line([MARGIN, VERDICT_Y - 12, W - MARGIN, VERDICT_Y - 12], fill=70)
-                if d["voc"]:
-                    dr.text((MARGIN, VERDICT_Y), head, font=F_LG, fill=255)
-                else:
-                    dr.text((MARGIN, VERDICT_Y), "NO CONFIDENT MATCH", font=F_LG, fill=140)
+                txt = head if d["voc"] else "NO CONFIDENT MATCH"
+                tw = dr.textlength(txt, font=F_LG)
+                dr.text(((W - tw) / 2, VERDICT_Y), txt, font=F_LG,
+                        fill=255 if d["voc"] else 140)
 
             writer.append_data(np.array(im.convert("RGB")))
         print(f"  rendered segment {si}", flush=True)
