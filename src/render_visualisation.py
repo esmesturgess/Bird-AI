@@ -30,9 +30,8 @@ SR = 16000
 MARGIN = 46
 SPEC_TOP, SPEC_BOT = 88, 368
 TERM_TOP = 414
-LINE_H = 19
+LINE_H = 25              # bumped from 19 so the larger F_MD below still has clean spacing
 BAR_CELLS, BAR_START, BAR_END = 34, 0.12, 0.52
-RESULT_GAP = 14          # extra breathing room above the final result line
 FONT_PATH = "/System/Library/Fonts/Menlo.ttc"
 
 
@@ -43,7 +42,9 @@ def font(size: int):
         return ImageFont.load_default()
 
 
-F_SM, F_MD, F_RESULT = font(15), font(17), font(26)
+F_SM, F_MD = font(15), font(21)     # F_MD bumped from 17 -> 21: the whole log got bigger,
+                                    # not just the result line, so the result reads as an
+                                    # ordinary line the log arrived at, not a separate banner
 
 
 def mel_image(y: np.ndarray) -> Image.Image:
@@ -59,26 +60,26 @@ def mel_image(y: np.ndarray) -> Image.Image:
 
 
 def decision_lines(seg: int, species_sci: str, species_slug: str | None, voc: str,
-                   sims: dict[str, float], species_conf: float) -> list[tuple[float, str, bool]]:
-    """(fraction of the segment elapsed, line, is_the_final_result) — the log fills in as
-    the bird sings, ending with the result on its own line, same font family as everything
-    above it, just larger."""
+                   sims: dict[str, float], species_conf: float) -> list[tuple[float, str]]:
+    """(fraction of the segment elapsed, line) — the log fills in as the bird sings, ending
+    with the result as an ordinary line, same font/size/colour as every line above it, so
+    it reads as the log arriving at its answer rather than a separate UI element."""
     order = sorted(sims, key=lambda k: -sims[k])
-    L: list[tuple[float, str, bool]] = [
-        (0.02, f"$ classify --segment {seg:02d}", False),
-        (0.08, f"  {species_sci:<18s} {species_conf:.2f}", False),
-        (0.55, "  nearest prototype:", False),
+    L: list[tuple[float, str]] = [
+        (0.02, f"$ classify --segment {seg:02d}"),
+        (0.08, f"  {species_sci:<18s} {species_conf:.2f}"),
+        (0.55, "  nearest prototype:"),
     ]
     t = 0.60
     for k in order:
         bar = "#" * int(round(sims[k] * 34))
         mark = "<--" if k == voc else "   "
-        L.append((t, f"      {k:<9s} {sims[k]:.3f}  {bar:<34s} {mark}", False))
+        L.append((t, f"      {k:<9s} {sims[k]:.3f}  {bar:<34s} {mark}"))
         t += 0.05
 
     species_disp = species_slug.replace("_", " ").title() if species_slug else "Unknown"
     voc_disp = voc.title() if voc and voc != "-" else "Unknown"
-    L.append((min(t + 0.03, 0.94), f"Species: {species_disp}  |  Vocalisation type: {voc_disp}", True))
+    L.append((min(t + 0.03, 0.94), f"Species: {species_disp}  |  Vocalisation type: {voc_disp}"))
     return L
 
 
@@ -172,15 +173,10 @@ def main() -> None:
 
             dr.line([MARGIN, TERM_TOP - 18, W - MARGIN, TERM_TOP - 18], fill=70)
             y = TERM_TOP
-            for frac, text, is_result in lines:
+            for frac, text in lines:
                 if prog >= frac:
-                    if is_result:
-                        y += RESULT_GAP
-                        dr.text((MARGIN, y), text, font=F_RESULT, fill=205)
-                        y += F_RESULT.size + 6
-                    else:
-                        dr.text((MARGIN, y), text, font=F_MD, fill=205)
-                        y += LINE_H
+                    dr.text((MARGIN, y), text, font=F_MD, fill=205)
+                    y += LINE_H
                 if frac == 0.08 and prog >= BAR_START:      # the bar sits under the read line
                     fill_frac = min(1.0, (prog - BAR_START) / (BAR_END - BAR_START))
                     done = int(round(fill_frac * BAR_CELLS))
