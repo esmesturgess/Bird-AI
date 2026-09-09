@@ -29,3 +29,33 @@ in training. The ~0.80 figure in `models/README.md` refers to properly segmented
 10 of 12 species × vocalisation combinations. Missing: blackbird juvenile and robin
 juvenile — the two weakest cells in the project (0.690 and 0.493), where no candidate
 classified correctly.
+
+## The screen — `exhibition_v1.mp4`
+
+1280×720, greyscale, 5:00, audio muxed in. Top: the segment's mel spectrogram with a
+playhead sweeping across its 25 s. Bottom: the decision log filling in as the bird sings,
+ending in the verdict.
+
+**The similarity bars are real.** `src/render_visualisation.py` runs the actual classifier
+on each segment and keeps all four prototype scores, so the screen shows genuine reasoning
+— including the near-misses. Segment 04 reads song 0.906 against call 0.796, which is an
+honest picture of how close some of these are.
+
+Rebuild after changing the soundscape:
+
+    python -m src.render_visualisation \
+      --soundscape data/soundscapes/exhibition_v1.flac \
+      --truth data/soundscapes/exhibition_v1_truth.csv \
+      --out data/soundscapes/exhibition_v1.mp4
+
+Delete `_sims_cache.json` first, or it will reuse the previous run's scores.
+
+## Playing it on the NUC
+
+    sudo apt install -y mpv
+    mpv --fullscreen --loop-file=inf --no-osc data/soundscapes/exhibition_v1.mp4
+
+That is the whole installation output — picture and sound, always in sync, no models
+running. Note this makes the screen a faithful *recording* of the decision rather than one
+being made live; the computation is identical either way because the soundscape is fixed.
+Use `scripts/run_installation.sh` instead if the machine should genuinely classify on the night.

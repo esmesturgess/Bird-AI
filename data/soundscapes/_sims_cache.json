@@ -1,0 +1,146 @@
+[
+ {
+  "species": "blackbird",
+  "sci": "Turdus merula",
+  "conf": 0.8939,
+  "sims": {
+   "alarm": -0.07048682123422623,
+   "call": 0.3025479018688202,
+   "juvenile": 0.21200859546661377,
+   "song": 0.9882178902626038
+  },
+  "voc": "song"
+ },
+ {
+  "species": "robin",
+  "sci": "Erithacus rubecula",
+  "conf": 0.9561,
+  "sims": {
+   "alarm": 0.6454817056655884,
+   "call": 0.9819097518920898,
+   "juvenile": -0.04664897173643112,
+   "song": 0.23354898393154144
+  },
+  "voc": "call"
+ },
+ {
+  "species": "tawny_owl",
+  "sci": "Strix aluco",
+  "conf": 0.9488,
+  "sims": {
+   "alarm": 0.26145318150520325,
+   "call": 0.3375416100025177,
+   "juvenile": 0.9871053099632263,
+   "song": -0.02748105116188526
+  },
+  "voc": "juvenile"
+ },
+ {
+  "species": "blackbird",
+  "sci": "Turdus merula",
+  "conf": 0.9543,
+  "sims": {
+   "alarm": 0.7789958715438843,
+   "call": 0.6650952696800232,
+   "juvenile": 0.11539355665445328,
+   "song": 0.022308865562081337
+  },
+  "voc": "alarm"
+ },
+ {
+  "species": "tawny_owl",
+  "sci": "Strix aluco",
+  "conf": 0.9819,
+  "sims": {
+   "alarm": 0.195354625582695,
+   "call": 0.7961163520812988,
+   "juvenile": 0.030815482139587402,
+   "song": 0.906394362449646
+  },
+  "voc": "song"
+ },
+ {
+  "species": "robin",
+  "sci": "Erithacus rubecula",
+  "conf": 0.9943,
+  "sims": {
+   "alarm": 0.23798739910125732,
+   "call": 0.3055042326450348,
+   "juvenile": -0.043785758316516876,
+   "song": 0.9907575845718384
+  },
+  "voc": "song"
+ },
+ {
+  "species": "tawny_owl",
+  "sci": "Strix aluco",
+  "conf": 0.9996,
+  "sims": {
+   "alarm": 0.4121291935443878,
+   "call": 0.9828648567199707,
+   "juvenile": 0.21924421191215515,
+   "song": 0.48673343658447266
+  },
+  "voc": "call"
+ },
+ {
+  "species": "blackbird",
+  "sci": "Turdus merula",
+  "conf": 0.891,
+  "sims": {
+   "alarm": 0.5820271372795105,
+   "call": 0.8492708206176758,
+   "juvenile": 0.10712707787752151,
+   "song": 0.10446814447641373
+  },
+  "voc": "call"
+ },
+ {
+  "species": "robin",
+  "sci": "Erithacus rubecula",
+  "conf": 0.299,
+  "sims": {
+   "alarm": 0.9227653741836548,
+   "call": 0.7406322360038757,
+   "juvenile": 0.16706493496894836,
+   "song": 0.2680165469646454
+  },
+  "voc": "alarm"
+ },
+ {
+  "species": "tawny_owl",
+  "sci": "Strix aluco",
+  "conf": 0.6304,
+  "sims": {
+   "alarm": 0.8867024779319763,
+   "call": 0.5583621859550476,
+   "juvenile": 0.29920196533203125,
+   "song": 0.3153418004512787
+  },
+  "voc": "alarm"
+ },
+ {
+  "species": "blackbird",
+  "sci": "Turdus merula",
+  "conf": 0.9228,
+  "sims": {
+   "alarm": 0.15028679370880127,
+   "call": 0.6176279187202454,
+   "juvenile": 0.22571024298667908,
+   "song": 0.7368860840797424
+  },
+  "voc": "song"
+ },
+ {
+  "species": "tawny_owl",
+  "sci": "Strix aluco",
+  "conf": 0.1616,
+  "sims": {
+   "alarm": 0.610020637512207,
+   "call": 0.5448978543281555,
+   "juvenile": 0.7173505425453186,
+   "song": 0.21485485136508942
+  },
+  "voc": "juvenile"
+ }
+]
