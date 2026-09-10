@@ -1451,6 +1451,32 @@ a nearest-prototype call in the `# milestone 1 hook`. Output would SAY a call-ty
 would be UNRELIABLE (the unsolved label problem). Milestone 2 = full install loop
 (play->classify->trigger 2nd speaker), not built.
 
+## Disk cleanup (2026-09-10) — deleted, don't go looking for these
+
+Machine hit 100% full. Deleted, all SAFE (derived data / conclusions preserved):
+- **Owl chunk dirs, bb_demo_*, robin_juv_demo, candidates/** — this-session throwaway fetches;
+  the 12 chosen soundscape clips live in `data/soundscapes/for_nelson/`.
+- **Wood Pigeon + House Sparrow** raw audio + all runs — abandoned species.
+- **Robin juvenile worldwide-scan** attempts — the "EXHAUSTED, do not re-attempt" dead end.
+- **Superseded Blackbird intermediate runs** — `blackbird_macaulay_v1_pattern_layer`,
+  `blackbird_all_labelled_v1`, `blackbird_macaulay_final_pattern_layer`,
+  `blackbird_xc_eu_v1_pattern_layer`, `blackbird_xeno_canto_v1_pattern_layer`, the two
+  `blackbird_macaulay_eu_v2/v3` dirs, both `*_aug_uk_*` dirs. ALL superseded by
+  `data/runs/blackbird_alarm_capped_v1/` (the locked final dataset) — that plus
+  `data/runs/aves2_embeddings/blackbird_full_aves2.npy` is intact.
+- **Wren** — `wren_combined_v1_pattern_layer`, `wren_supcon_eval_v1.json`, `wren_*` raw.
+  Wren FAILED (0.423, below floor); every number is written up in this file. The embeddings
+  are gone — re-fetch + re-run from `src/build_species_dataset.py` if the negative result
+  ever needs re-verifying.
+- **`data/raw/robin_macaulay_eu_v1`** (the held-out external-validation set) — external
+  validation was deferred indefinitely; user chose to delete. Re-fetchable via
+  `src/fetch_macaulay_labels.py --taxon_code eurrob1` if that task is ever revived.
+
+INTACT and canonical for all 3 species: `data/runs/{blackbird_alarm_capped_v1,
+robin_xconly_pattern_layer,owl_pattern_layer}/` (BirdNET embeddings + label CSVs),
+`data/runs/aves2_embeddings/*_full_aves2.npy` (AVES2 embeddings), `models/{blackbird,robin,
+tawny_owl}/` (deployable checkpoints), `data/soundscapes/` (soundscape + video + Nelson pack).
+
 ## The mic PoC's blocker is now RESOLVED (2026-09-08)
 
 `MIC_POC_PLAN.md` scoped itself to **species only**, explicitly "no call-type, per the
