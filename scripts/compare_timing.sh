@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
-# Start the pre-rendered VIDEO and the LIVE classifier at the same instant, so you can
-# watch them side by side and see whether real-time classification on this machine keeps
-# pace with the video's timeline. This is a bench comparison, not the exhibition setup —
-# it plays the soundscape TWICE (once baked into the video, once live), so expect doubled/
-# echoing audio; that's expected and fine for a timing test.
+# Start the LIVE classifier immediately, and the pre-rendered VIDEO after a delay that
+# accounts for the classifier's one-time model-loading + first-segment cost — so the two
+# line up at segment 0 and stay lined up from there. (Measured on the NUC, 2026-09-11:
+# ~52s from launch to the first result; every segment after that took ~20s to classify
+# against a 25s slot, so nothing accumulates once past that first one.)
 #
 #   bash scripts/compare_timing.sh
+#   STARTUP_DELAY=60 bash scripts/compare_timing.sh     # if your machine's slower/faster
 #
-# Reads: the video's own on-screen "t = ##.# s" clock.
-# Reads: this terminal's "[wall ##.#s | nominal ##s]" lines from the live classifier —
-#   the "(this is +NNs off)" note on each line says how far behind (or ahead) it is of
-#   where the video would be at that same nominal segment. Ctrl+C stops both.
+# Reads: the video's own on-screen "t = ##.# s" clock, and this terminal's
+# "[wall ##.#s | nominal ##s]" lines — the "(this is +-Ns off)" note on each should now
+# sit close to the STARTUP_DELAY's own margin of error, not grow. --dry_run plays no
+# audio itself, so only the video's sound is heard — nothing doubled. Ctrl+C stops both.
 set -u
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 VIDEO="${VIDEO:-data/soundscapes/exhibition_v2.mp4}"
 SOUNDSCAPE="${SOUNDSCAPE:-data/soundscapes/exhibition_v2.flac}"
 SEGMENT="${SEGMENT:-25}"
+STARTUP_DELAY="${STARTUP_DELAY:-52}"
 PY="./.venv/bin/python"; [ -x "$PY" ] || PY="python3"
 BN="./.venv/bin/birdnet-analyze"; [ -x "$BN" ] || BN="birdnet-analyze"
 
@@ -26,14 +28,12 @@ BN="./.venv/bin/birdnet-analyze"; [ -x "$BN" ] || BN="birdnet-analyze"
 START=$("$PY" -c "import time; print(time.time())")   # portable: bash `date +%s.%N` is a
                                                        # GNU-only extension and silently
                                                        # fails on macOS/BSD date
-echo "starting video + live classifier together at epoch $START ..."
-echo "(the classifier still needs ~30-90s to load its models first — that startup cost"
-echo " is real and the video pays none of it; watch the first 'wall' timestamp to see it)"
+echo "starting live classifier now; video starts in ${STARTUP_DELAY}s to match its"
+echo "model-loading + first-segment cost, so segment 0 of both line up ..."
 echo ""
 
-mpv --no-fs "$VIDEO" &
+( sleep "$STARTUP_DELAY"; mpv --no-fs "$VIDEO" ) &
 MPV_PID=$!
-
 trap 'kill "$MPV_PID" 2>/dev/null' EXIT INT TERM
 
 "$PY" scripts/live_soundscape.py \
