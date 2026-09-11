@@ -165,7 +165,10 @@ def main() -> None:
             dr.text((W - MARGIN - 210, 34),
                     f"t = {si*args.segment_seconds + prog*args.segment_seconds:6.1f} s", font=F_MD, fill=150)
 
-            im.paste(specs[si], (MARGIN, SPEC_TOP))
+            # only paste the portion already PLAYED — pasting the whole image up front would
+            # let someone read the shape of a call before they hear it, which defeats the point
+            revealed_w = max(1, int(prog * spec_w))
+            im.paste(specs[si].crop((0, 0, revealed_w, specs[si].height)), (MARGIN, SPEC_TOP))
             dr.rectangle([MARGIN, SPEC_TOP, W - MARGIN, SPEC_BOT], outline=90)
             x = MARGIN + int(prog * spec_w)
             dr.line([x, SPEC_TOP, x, SPEC_BOT], fill=255, width=2)
