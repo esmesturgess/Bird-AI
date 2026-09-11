@@ -98,6 +98,38 @@ meter's suggestion is not.
 - **Mic records silence:** check the device index with `--list_devices` and `arecord -l`,
   and check input gain in the system sound settings. `--meter` tells you within seconds.
 
+## 6. The actual installation: video on loop, no keyboard needed
+
+The exhibition doesn't run `infer_clip.py` or any live classifier on the NUC — it plays
+one pre-rendered video (`data/soundscapes/exhibition_v2.mp4`, soundscape + on-screen
+visualisation, already classified and baked in) full-screen, forever. This is deliberate:
+this NUC's i3-5010U is too slow to classify live and draw a live display at once, and an
+unattended installation should sit at ~2% CPU playing video, not pinned at 100% for weeks.
+
+Test it manually first:
+
+```bash
+bash scripts/kiosk_play.sh
+```
+
+Full-screen video, looping, screensaver disabled, no on-screen controls. `Ctrl+C` to stop.
+
+Then wire it to start itself on power-on:
+
+```bash
+bash scripts/install_autostart.sh
+```
+
+This prints the one manual step it can't safely do for you — turning on Automatic Login
+in the Login Window settings (a system login file, worth doing by hand rather than
+scripted blind on hardware nobody's tested it on). Once that's set: power on → desktop
+loads → video starts → loops. No monitor-as-keyboard, no command to remember.
+
+To swap in a different video later (a new soundscape, or once the sound artist's 12
+response clips are mixed in), either replace `data/soundscapes/exhibition_v2.mp4` in
+place, or point `kiosk_play.sh` at a new file with `VIDEO=path/to/new.mp4 bash
+scripts/kiosk_play.sh`.
+
 ## What this is / isn't
 
 - ✅ Milestone 0: clip → species, spoken aloud. Runs on the NUC.

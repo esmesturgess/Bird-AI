@@ -9,14 +9,14 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 echo "Repo root: $(pwd)"
 
 echo ""
-echo "== 1/4 system packages (needs sudo) =="
+echo "== 1/5 system packages (needs sudo) =="
 sudo apt update
 sudo apt install -y python3-venv python3-pip python3-dev build-essential \
-     libsndfile1 ffmpeg espeak-ng git \
+     libsndfile1 ffmpeg espeak-ng git mpv \
      libportaudio2 portaudio19-dev
 
 echo ""
-echo "== 2/4 python virtual environment =="
+echo "== 2/5 python virtual environment =="
 python3 -m venv .venv
 # shellcheck disable=SC1091
 source .venv/bin/activate
