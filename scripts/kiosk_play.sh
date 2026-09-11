@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
-# The installation, unattended: play the video full-screen, forever, no controls, no
-# screensaver interrupting it. This is what autostart launches on power-on — see
-# install_autostart.sh. Run it by hand to test before wiring it to boot:
+# The installation, unattended, from one command: play the sync countdown once (your cue
+# to start the separate raw-sound speaker at GO), then loop the main exhibition video
+# full-screen forever, no controls, no screensaver interrupting it. This is what autostart
+# launches on power-on — see install_autostart.sh. Run it by hand to test:
 #
 #   bash scripts/kiosk_play.sh
 #
 # Ctrl+C to stop when testing (autostart normally has no way to interrupt it, by design).
+# Set SKIP_COUNTDOWN=1 to jump straight to the loop (e.g. re-testing just the exhibition).
 set -u
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+COUNTDOWN="${COUNTDOWN:-data/soundscapes/countdown.mp4}"
 VIDEO="${VIDEO:-data/soundscapes/exhibition_v2.mp4}"
 
 # give the desktop session (and its audio server) a moment to finish coming up before
@@ -25,5 +28,12 @@ gsettings set org.cinnamon.settings-daemon.plugins.power sleep-display-ac 0 2>/d
 
 [ -f "$VIDEO" ] || { echo "kiosk_play.sh: video not found: $VIDEO" >&2; exit 1; }
 
-exec mpv --fullscreen --loop-file=inf --no-osc --no-input-default-bindings \
-         --input-vo-keyboard=no --really-quiet "$VIDEO"
+MPV_KIOSK=(--fullscreen --no-osc --no-input-default-bindings --input-vo-keyboard=no --really-quiet)
+
+if [ "${SKIP_COUNTDOWN:-0}" != "1" ] && [ -f "$COUNTDOWN" ]; then
+  # plays ONCE (no --loop-file) and returns when it finishes — this is the one moment
+  # someone needs to be there to press play on the separate raw-sound speaker, at GO
+  mpv "${MPV_KIOSK[@]}" "$COUNTDOWN"
+fi
+
+exec mpv --loop-file=inf "${MPV_KIOSK[@]}" "$VIDEO"

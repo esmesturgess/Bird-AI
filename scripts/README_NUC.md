@@ -106,13 +106,19 @@ visualisation, already classified and baked in) full-screen, forever. This is de
 this NUC's i3-5010U is too slow to classify live and draw a live display at once, and an
 unattended installation should sit at ~2% CPU playing video, not pinned at 100% for weeks.
 
-Test it manually first:
+The raw bird sound plays on its own separate speaker/device, not connected to the NUC —
+there's no software link between the two, so starting them together is a manual step.
+`kiosk_play.sh` handles this from the one command: it plays `data/soundscapes/
+countdown.mp4` once (5, 4, 3, 2, 1, GO — your cue to press play on the raw-sound device
+at GO), THEN automatically rolls into the exhibition loop. Test it manually first:
 
 ```bash
 bash scripts/kiosk_play.sh
 ```
 
-Full-screen video, looping, screensaver disabled, no on-screen controls. `Ctrl+C` to stop.
+Countdown once, then full-screen video, looping, screensaver disabled, no on-screen
+controls. `Ctrl+C` to stop. `SKIP_COUNTDOWN=1 bash scripts/kiosk_play.sh` jumps straight
+to the loop, for re-testing just the exhibition without the wait.
 
 Then wire it to start itself on power-on:
 
