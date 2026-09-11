@@ -64,3 +64,16 @@ Minor known artifact: AAC's lossy stereo compression leaves a faint trace of the
 audio bleeding into the left channel during its silent window (~13% of the bird's own
 level, checked by RMS) — a channel-separation limit of the lossy codec, not a routing bug.
 Likely inaudible in practice; worth an ear-check in the actual room.
+
+## countdown.mp4 — syncing two independent playback systems by hand
+
+For the current plan — the NUC's stereo pair plays the translated/response sound, and a
+separate speaker (its own device, not connected to the NUC) plays the raw bird sound —
+there is no software link between the two, so starting them together is a manual,
+physical action. `countdown.mp4` is a 6-second standalone clip for exactly that: 5, 4, 3,
+2, 1, then a distinct GO (different tone, brighter flash). Play it once when you're ready
+to start both systems; press play on the raw-sound device the instant GO appears, then
+start (or let autostart handle) the main `exhibition_v2.mp4` loop.
+
+Deliberately NOT baked into the main loop — the gallery-facing video shouldn't repeat a
+countdown every 7 minutes. Rebuild with `python -m src.render_countdown`.
