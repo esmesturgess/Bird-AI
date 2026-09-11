@@ -28,7 +28,13 @@ gsettings set org.cinnamon.settings-daemon.plugins.power sleep-display-ac 0 2>/d
 
 [ -f "$VIDEO" ] || { echo "kiosk_play.sh: video not found: $VIDEO" >&2; exit 1; }
 
-MPV_KIOSK=(--fullscreen --no-osc --no-input-default-bindings --input-vo-keyboard=no --really-quiet)
+INPUT_CONF="$(pwd)/scripts/mpv_kiosk.conf"
+# --no-input-default-bindings turns off everything mpv normally binds (seek, quit,
+# fullscreen toggle, volume...); --input-conf then re-adds exactly one binding (space =
+# pause, see mpv_kiosk.conf) and nothing else. Deliberately NOT passing
+# --input-vo-keyboard=no here: on X11 (Linux Mint's default) that's often the only path
+# keypresses reach mpv at all in fullscreen, so disabling it would silently break space too.
+MPV_KIOSK=(--fullscreen --no-osc --no-input-default-bindings --input-conf="$INPUT_CONF" --really-quiet)
 
 if [ "${SKIP_COUNTDOWN:-0}" != "1" ] && [ -f "$COUNTDOWN" ]; then
   # plays ONCE (no --loop-file) and returns when it finishes — this is the one moment
