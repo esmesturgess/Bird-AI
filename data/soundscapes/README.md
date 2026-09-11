@@ -35,3 +35,32 @@ playback fix.
 If the picks change, the soundscape needs the same duration handling — see
 `for_sound_artist/README.md` for the picks-to-package pipeline, or ask me and I'll rebuild
 both the audio and the video together so they never drift out of sync.
+
+## Stereo responses (2026-09-11)
+
+`exhibition_v2.mp4` now has real stereo audio: **left channel = the bird** (Speaker A,
+outside the nest), **right channel = the response** (Speaker B, inside). Each segment is
+two phases back to back — the bird sings for 25s while the spectrogram/log reveal as
+before, then the screen holds on that finished frame (spectrogram complete, verdict
+showing) while the response plays on its own, right channel only. Total length grew from
+5:00 to 7:12 as a result. `exhibition_v2_truth_final.csv` has the real per-segment timing
+(bird/response start times and durations both now vary — no longer a fixed 25s grid).
+
+**Responses are currently the 4 generic recordings** (`data/response_sounds/*.m4a`,
+matched by vocalisation type only — song/call/alarm/juvenile, not yet per-species), a
+placeholder until the sound artist's 12 species-specific clips are ready. Swap them in
+with:
+
+    python -m src.render_exhibition \
+      --soundscape data/soundscapes/exhibition_v2.flac \
+      --truth data/soundscapes/exhibition_v2_truth.csv \
+      --response_dir <new response folder, one file per vocalisation type> \
+      --out data/soundscapes/exhibition_v2.mp4
+
+Nothing else changes — `kiosk_play.sh` and the autostart setup already point at this
+filename.
+
+Minor known artifact: AAC's lossy stereo compression leaves a faint trace of the response
+audio bleeding into the left channel during its silent window (~13% of the bird's own
+level, checked by RMS) — a channel-separation limit of the lossy codec, not a routing bug.
+Likely inaudible in practice; worth an ear-check in the actual room.
