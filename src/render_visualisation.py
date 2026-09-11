@@ -8,9 +8,9 @@ The decision log is not decorative: the prototype similarity bars are the real n
 classifier produced for that segment, so the screen shows the actual reasoning.
 
     python -m src.render_visualisation \
-        --soundscape data/soundscapes/exhibition_v1.flac \
-        --truth data/soundscapes/exhibition_v1_truth.csv \
-        --out data/soundscapes/exhibition_v1.mp4
+        --soundscape data/soundscapes/exhibition_v2.flac \
+        --truth data/soundscapes/exhibition_v2_truth.csv \
+        --out data/soundscapes/exhibition_v2.mp4
 """
 from __future__ import annotations
 

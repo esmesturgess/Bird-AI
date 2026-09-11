@@ -7,7 +7,7 @@ gallery noise and any feedback loop between the two speakers.
 Latency is hidden by PIPELINING: segment N+1 is classified in a background thread while
 segment N is still playing, so the answer is ready the moment it is needed.
 
-    python scripts/live_soundscape.py --soundscape data/soundscapes/exhibition_v1.wav
+    python scripts/live_soundscape.py --soundscape data/soundscapes/exhibition_v2.flac
     python scripts/live_soundscape.py --soundscape x.wav --dry_run     # no audio, prints only
 
 Speaker routing: --left_only sends the soundscape to the left channel alone, so Speaker A

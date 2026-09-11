@@ -10,7 +10,7 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-SOUNDSCAPE="${SOUNDSCAPE:-data/soundscapes/exhibition_v1.flac}"
+SOUNDSCAPE="${SOUNDSCAPE:-data/soundscapes/exhibition_v2.flac}"
 SEGMENT="${SEGMENT:-25}"
 
 # prefer the venv python, fall back to whatever is active
