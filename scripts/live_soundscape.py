@@ -55,6 +55,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--no_speak", action="store_true")
     p.add_argument("--talk_over", action="store_true",
                    help="answer while the bird is still playing, instead of waiting for it to finish")
+    p.add_argument("--start_epoch", type=float, default=None,
+                   help="unix timestamp shared with another process (e.g. the video player) "
+                        "so printed timings are directly comparable to its wall clock, rather "
+                        "than this process's own start time. Set by compare_timing.sh.")
     return p.parse_args()
 
 
@@ -75,6 +79,11 @@ def main() -> None:
     t0 = time.time()
     clf = Classifier(args.models_dir, birdnet_binary=args.birdnet_binary)
     print(f"  ready in {time.time()-t0:.0f}s · heads: {', '.join(sorted(clf.heads))}", flush=True)
+
+    # if a shared start time was given (compare_timing.sh), timings below are wall-clock
+    # elapsed since THAT moment, directly comparable to the video's own on-screen clock —
+    # including the model-load time above, which the precomputed video pays zero cost for.
+    run_start = args.start_epoch if args.start_epoch is not None else time.time()
 
     if not args.dry_run:
         import sounddevice as sd
@@ -115,14 +124,17 @@ def main() -> None:
                     pending[j] = r
                 res = pending.pop(i)
 
+                wall = time.time() - run_start
+                lag = f" (video is at {i*args.segment_seconds:.0f}s, this is {wall-i*args.segment_seconds:+.0f}s off)" \
+                      if args.start_epoch is not None else ""
                 if args.dry_run:
-                    print(f"[{i*args.segment_seconds:6.0f}s] {res.spoken():24s} "
-                          f"species {res.species_confidence:.2f} · match {res.vocalisation_confidence:.2f}", flush=True)
+                    print(f"[wall {wall:6.1f}s | nominal {i*args.segment_seconds:5.0f}s] {res.spoken():24s} "
+                          f"species {res.species_confidence:.2f} · match {res.vocalisation_confidence:.2f}{lag}", flush=True)
                     continue
 
                 out = seg if not args.left_only else np.column_stack([seg, np.zeros_like(seg)])
-                print(f"[{i*args.segment_seconds:6.0f}s] ♪ {res.spoken():24s} "
-                      f"species {res.species_confidence:.2f} · match {res.vocalisation_confidence:.2f}", flush=True)
+                print(f"[wall {wall:6.1f}s | nominal {i*args.segment_seconds:5.0f}s] ♪ {res.spoken():24s} "
+                      f"species {res.species_confidence:.2f} · match {res.vocalisation_confidence:.2f}{lag}", flush=True)
                 sd.play(out, SR)
                 if args.talk_over:
                     if not args.no_speak:
