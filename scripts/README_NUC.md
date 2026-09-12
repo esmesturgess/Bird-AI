@@ -117,11 +117,12 @@ bash scripts/kiosk_play.sh
 ```
 
 Countdown once, then full-screen video, looping, screensaver disabled, no on-screen
-controls except one: **space bar pauses/resumes** (`scripts/mpv_kiosk.conf` — every other
-key mpv would normally respond to, seeking, quitting, fullscreen toggle, is switched off,
-so nothing else can interrupt the loop by accident). `Ctrl+C` to stop from the terminal.
-`SKIP_COUNTDOWN=1 bash scripts/kiosk_play.sh` jumps straight to the loop, for re-testing
-just the exhibition without the wait.
+controls except three (`scripts/mpv_kiosk.conf`): **space** pauses/resumes, **q** or
+**Esc** quits. Everything else mpv would normally respond to — seeking, volume, fullscreen
+toggle — is switched off, so a stray keypress can't derail the loop, but you are never
+locked in. `Ctrl+C` from the launching terminal also works, and `pkill mpv` from any other
+terminal is the last resort. `SKIP_COUNTDOWN=1 bash scripts/kiosk_play.sh` jumps straight
+to the loop, for re-testing just the exhibition without the wait.
 
 Then wire it to start itself on power-on:
 
