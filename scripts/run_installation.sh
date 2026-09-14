@@ -11,7 +11,7 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 SOUNDSCAPE="${SOUNDSCAPE:-data/soundscapes/exhibition_v2.flac}"
-SEGMENT="${SEGMENT:-25}"
+SEGMENT="${SEGMENT:-20}"
 
 # prefer the venv python, fall back to whatever is active
 PY="./.venv/bin/python"; [ -x "$PY" ] || PY="python3"

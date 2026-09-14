@@ -1558,3 +1558,13 @@ Still to build (see plan stages 2-4): `src/live_species.py`, `src/live_respond.p
 - `PROJECT_REBRIEF.md` and `REPO_ZONES.md` are curated docs kept up to date by hand;
   update them (not just this file) if the architecture or species status materially
   changes.
+
+## Exhibition display numbers are NOT raw model output (2026-09-14)
+
+Artist's decision: `render_exhibition.py` re-spreads BirdNET species confidences into
+0.80-0.89 by rank for display (real range was 0.17-1.00) and shows negative vocalisation
+similarities as 0.000. Winners (species + type) are always real. Real vs shown values:
+`data/soundscapes/exhibition_v2_truth_final.csv`. **Never cite on-screen confidences as
+performance** (e.g. in the zine) — the honest figures are the nested-CV ~0.80 results.
+Exhibition timing is now a strict 20s grid (20s bird + 20s translation, 8:00 loop); the
+running order and rationale are in `data/soundscapes/README.md`.

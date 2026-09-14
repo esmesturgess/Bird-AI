@@ -28,7 +28,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 VIDEO="${VIDEO:-data/soundscapes/exhibition_v2.mp4}"
 SOUNDSCAPE="${SOUNDSCAPE:-data/soundscapes/exhibition_v2.flac}"
-SEGMENT="${SEGMENT:-25}"
+SEGMENT="${SEGMENT:-20}"
 STARTUP_DELAY="${STARTUP_DELAY:-52}"
 PY="./.venv/bin/python"; [ -x "$PY" ] || PY="python3"
 BN="./.venv/bin/birdnet-analyze"; [ -x "$BN" ] || BN="birdnet-analyze"

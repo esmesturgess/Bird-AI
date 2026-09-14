@@ -1,17 +1,28 @@
 """Build the final exhibition asset: stereo audio + narrated visualisation, muxed to video.
 
-Each segment has two phases, back to back:
+Every phase is exactly 20s, so the on-screen clock only ever changes page on a multiple of
+20. Each segment is two phases, back to back:
 
-  1. BIRD (25s) — the raw call plays on the LEFT channel while the analysis runs on screen.
+  1. BIRD (20s) — the raw call plays on the LEFT channel while the analysis runs on screen.
      A synthesised voice narrates it, timed to the visuals and centred across both
      channels: "Detecting species..." over the loading bar, then the species said
      colloquially ("Tawny owl", not Strix aluco) as it resolves, then "Adapting sounds to
      the bird's emotions..." once the vocalisation-type scores are in. The bird audio ducks
      under each spoken line so the voice stays intelligible.
 
-  2. TRANSLATION (fixed length, 20s by default) — the response plays on the RIGHT channel
-     (Speaker B, inside the nest) and the screen clears to a status page reading
-     "Translation playing inside the nest...".
+  2. TRANSLATION (20s) — the response plays on the RIGHT channel (Speaker B, inside the
+     nest) and the screen clears to a status page reading "Translation playing inside the
+     nest...".
+
+DISPLAYED NUMBERS ARE A PRESENTATION LAYER, NOT ALL RAW MODEL OUTPUT (artist's decision,
+2026-09-14). BirdNET's species confidence varies wildly by clip (0.17 on a clear robin song,
+1.00 on every owl), which read as the model doing badly. On screen, species confidences are
+re-spread into 0.80-0.89 BY RANK — the clip BirdNET was least sure of shows 0.80, the most
+sure 0.89, so which one was more confident is still the model's answer. Negative
+vocalisation similarities (cosine can go below zero) are shown as 0.000. Everything else,
+including which species and which vocalisation type wins, is the model's real output.
+The real values are written alongside the shown ones in the *_final.csv. `--real_numbers`
+renders the raw values instead.
 
 Responses are looked up per species AND vocalisation first (`robin_alarm.wav`, anywhere
 under --response_dir — the sound artist's 12), falling back to a generic per-type clip
@@ -55,6 +66,7 @@ NARRATION_GAIN = 0.95
 DUCK_LEVEL = 0.35                   # how far the bird drops under a spoken line
 DUCK_RAMP_S = 0.12
 AUDIO_EXTS = {".wav", ".m4a", ".mp3", ".aif", ".aiff", ".flac"}
+SHOWN_SPECIES_CONF = (0.80, 0.89)   # display range for species confidence, see docstring
 
 COLLOQUIAL = {"blackbird": "Blackbird", "robin": "Robin", "tawny_owl": "Tawny owl"}
 # on-screen names for the four vocalisation types (the model's labels stay the short keys)
@@ -62,7 +74,7 @@ VOC_DISPLAY = {"call": "Contact call", "song": "Mating signal",
                "alarm": "Alarm/distress call", "juvenile": "Juvenile begging"}
 VOC_W = max(len(v) for v in VOC_DISPLAY.values())
 
-# Fractions of the 25s bird phase. Retimed so the narration lands ON the thing it names:
+# Fractions of the bird phase. Retimed so the narration lands ON the thing it names:
 # the species is SPOKEN as its line appears, not before the bar that finds it.
 T_CMD, T_VOICE_DETECT = 0.02, 0.06
 T_BAR_START, T_BAR_END = 0.10, 0.42
@@ -91,6 +103,16 @@ def fit_length(y: np.ndarray, seconds: float, sr: int = OUT_SR) -> np.ndarray:
         y[-f:] *= np.linspace(1, 0, f)
         return y
     return np.concatenate([y, np.zeros(n - len(y), dtype=y.dtype)])
+
+
+def shown_species_conf(real: list[float]) -> list[float]:
+    """Re-spread confidences into SHOWN_SPECIES_CONF by rank (least sure -> low end)."""
+    lo, hi = SHOWN_SPECIES_CONF
+    order = np.argsort(real, kind="stable")
+    out = [0.0] * len(real)
+    for rank, i in enumerate(order):
+        out[i] = round(lo + (hi - lo) * rank / max(1, len(real) - 1), 2)
+    return out
 
 
 def find_response(response_dir: Path, species: str, voc: str) -> tuple[Path | None, bool]:
@@ -126,7 +148,7 @@ def decision_lines(seg: int, species_sci: str, species_slug: str | None, voc: st
          (T_SPECIES, f"  {species_sci:<18s} {species_conf:.2f}"),
          (T_PROTO_HDR, "  Nearest vocalisation type:")]
     for i, k in enumerate(order):
-        bar = "#" * int(round(sims[k] * 30))
+        bar = "#" * int(round(max(0.0, sims[k]) * 30))
         mark = "<--" if k == voc else "   "
         L.append((T_SCORE_0 + i * T_SCORE_STEP,
                   f"      {VOC_DISPLAY.get(k, k):<{VOC_W}s} {sims[k]:.3f}  {bar:<30s} {mark}"))
@@ -136,11 +158,16 @@ def decision_lines(seg: int, species_sci: str, species_slug: str | None, voc: st
     return L
 
 
-def translation_page(si: int, n_segments: int, prog: float) -> Image.Image:
+def header(dr: ImageDraw.ImageDraw, si: int, n_segments: int, t: float) -> None:
+    dr.text((MARGIN, 34), f"SEGMENT {si:02d} / {n_segments-1:02d}", font=F_MD, fill=150)
+    dr.text((W - MARGIN - 210, 34), f"t = {t:6.1f} s", font=F_MD, fill=150)
+
+
+def translation_page(si: int, n_segments: int, prog: float, t: float) -> Image.Image:
     """Phase 2: analysis panel cleared, one status line, progress through the response."""
     im = Image.new("L", (W, H), 0)
     dr = ImageDraw.Draw(im)
-    dr.text((MARGIN, 34), f"SEGMENT {si:02d} / {n_segments-1:02d}", font=F_MD, fill=150)
+    header(dr, si, n_segments, t)
     dr.line([MARGIN, TERM_TOP - 18, W - MARGIN, TERM_TOP - 18], fill=70)
     y = TERM_TOP
     dr.text((MARGIN, y), "$ translate --to nest", font=F_MD, fill=205); y += LINE_H + 8
@@ -180,10 +207,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--out_truth", type=Path, default=None)
     p.add_argument("--models_dir", type=Path, default=Path("models"))
-    p.add_argument("--segment_seconds", type=float, default=25.0)
+    p.add_argument("--segment_seconds", type=float, default=20.0)
     p.add_argument("--birdnet_binary", default="./.venv/bin/birdnet-analyze")
     p.add_argument("--sims_cache", type=Path, default=Path("data/soundscapes/_sims_cache.json"))
     p.add_argument("--no_narration", action="store_true", help="build without the spoken voice")
+    p.add_argument("--real_numbers", action="store_true",
+                   help="show the model's raw confidences instead of the display layer")
     return p.parse_args()
 
 
@@ -204,6 +233,13 @@ def main() -> None:
     print("classifying each segment for the real decision log ...", flush=True)
     info = gather_similarities(args, birds)
 
+    real_conf = [float(d["conf"]) for d in info]
+    if args.real_numbers:
+        conf_shown, sims_shown = real_conf, [d["sims"] for d in info]
+    else:
+        conf_shown = shown_species_conf(real_conf)
+        sims_shown = [{k: max(0.0, v) for k, v in d["sims"].items()} for d in info]
+
     responses: dict[tuple[str, str], np.ndarray] = {}
     sources: dict[tuple[str, str], str] = {}
     for sp, voc in truth[["species", "vocalisation"]].drop_duplicates().itertuples(index=False):
@@ -223,29 +259,28 @@ def main() -> None:
 
     specs = [mel_image(s) for s in birds]
     logs = [decision_lines(i, d["sci"] or "no match", d.get("species"), d["voc"] or "-",
-                           d["sims"], d["conf"]) for i, d in enumerate(info)]
+                           sims_shown[i], conf_shown[i]) for i, d in enumerate(info)]
 
     tmp_video = Path(tempfile.mkstemp(suffix=".mp4")[1])
     writer = imageio.get_writer(tmp_video, fps=FPS, codec="libx264", quality=7, macro_block_size=1)
     spec_w = W - 2 * MARGIN
-    bird_frames = int(args.segment_seconds * FPS)
+    bird_frames = int(round(args.segment_seconds * FPS))
 
     left_chunks, right_chunks, rows = [], [], []
-    t_cursor = 0.0
+    t_cursor = 0.0                                   # real elapsed time; drives the clock
 
     for si, bird in enumerate(birds_hi):
         d, lines = info[si], logs[si]
         sp, voc = truth.iloc[si]["species"], truth.iloc[si]["vocalisation"]
         resp = responses[(sp, voc)]
+        bird_s, resp_s = len(bird) / OUT_SR, len(resp) / OUT_SR
 
         # ---- phase 1 frames: analysis, timed to the narration ----
         for f in range(bird_frames):
             prog = f / bird_frames
             im = Image.new("L", (W, H), 0)
             dr = ImageDraw.Draw(im)
-            dr.text((MARGIN, 34), f"SEGMENT {si:02d} / {len(birds)-1:02d}", font=F_MD, fill=150)
-            dr.text((W - MARGIN - 210, 34),
-                    f"t = {si*args.segment_seconds + prog*args.segment_seconds:6.1f} s", font=F_MD, fill=150)
+            header(dr, si, len(birds), t_cursor + prog * bird_s)
             revealed_w = max(1, int(prog * spec_w))
             im.paste(specs[si].crop((0, 0, revealed_w, specs[si].height)), (MARGIN, SPEC_TOP))
             dr.rectangle([MARGIN, SPEC_TOP, W - MARGIN, SPEC_BOT], outline=90)
@@ -267,10 +302,11 @@ def main() -> None:
             writer.append_data(np.array(im.convert("RGB")))
 
         # ---- phase 2 frames: the translation status page ----
-        resp_frames = max(1, int(round(len(resp) / OUT_SR * FPS)))
+        resp_frames = max(1, int(round(resp_s * FPS)))
         for f in range(resp_frames):
-            writer.append_data(np.array(
-                translation_page(si, len(birds), f / resp_frames).convert("RGB")))
+            prog = f / resp_frames
+            writer.append_data(np.array(translation_page(
+                si, len(birds), prog, t_cursor + bird_s + prog * resp_s).convert("RGB")))
 
         # ---- narration, placed on the same clock as the visuals ----
         narration = np.zeros(len(bird), dtype=np.float32)
@@ -295,11 +331,14 @@ def main() -> None:
 
         left_chunks += [left, np.zeros_like(resp)]
         right_chunks += [right, resp]
-        rows.append({"segment": si, "bird_start_s": t_cursor, "bird_duration_s": len(bird)/OUT_SR,
-                     "response_start_s": t_cursor + len(bird)/OUT_SR,
-                     "response_duration_s": len(resp)/OUT_SR, "species": sp, "vocalisation": voc,
+        rows.append({"segment": si, "bird_start_s": t_cursor, "bird_duration_s": bird_s,
+                     "response_start_s": t_cursor + bird_s, "response_duration_s": resp_s,
+                     "species": sp, "vocalisation": voc,
+                     "predicted_species": d.get("species"), "predicted_vocalisation": d["voc"],
+                     "species_conf_real": round(real_conf[si], 3),
+                     "species_conf_shown": conf_shown[si],
                      "response_file": Path(sources[(sp, voc)]).name})
-        t_cursor += len(bird)/OUT_SR + len(resp)/OUT_SR
+        t_cursor += bird_s + resp_s
         print(f"  rendered segment {si} ({sp} {voc})", flush=True)
 
     writer.close()

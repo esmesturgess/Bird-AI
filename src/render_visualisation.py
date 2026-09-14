@@ -89,7 +89,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--truth", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--models_dir", type=Path, default=Path("models"))
-    p.add_argument("--segment_seconds", type=float, default=25.0)
+    p.add_argument("--segment_seconds", type=float, default=20.0)
     p.add_argument("--birdnet_binary", default="./.venv/bin/birdnet-analyze")
     p.add_argument("--sims_cache", type=Path, default=Path("data/soundscapes/_sims_cache.json"))
     return p.parse_args()

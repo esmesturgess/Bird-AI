@@ -105,3 +105,41 @@ Rebuild:
       --truth data/soundscapes/exhibition_v2_truth.csv \
       --response_dir data/soundscapes/from_nelson \
       --out data/soundscapes/exhibition_v2.mp4
+
+## Everything on a 20s grid, new running order, display numbers (2026-09-14)
+
+**Every phase is now exactly 20s** — bird analysis 20s, translation 20s — so each segment
+is 40s, every page change lands on a multiple of 20, and the loop is 8:00. The bird track
+(`exhibition_v2.flac`) was rebuilt as 12 × 20s by taking the first 20s of each old 25s
+clip, with a 0.3s fade-out. The on-screen clock now counts real elapsed time continuously
+across BOTH pages (it used to show only bird time and skip the translations).
+
+**Running order** — each block of four has one of every type; no neighbours share a
+species or type, including where the loop wraps from 11 back to 0; opens on a song:
+
+| # | start | species | type |
+|---|---|---|---|
+| 0 | 0:00 | Blackbird | Mating signal |
+| 1 | 0:40 | Robin | Alarm/distress call |
+| 2 | 1:20 | Tawny owl | Juvenile begging |
+| 3 | 2:00 | Robin | Contact call |
+| 4 | 2:40 | Tawny owl | Mating signal |
+| 5 | 3:20 | Blackbird | Contact call |
+| 6 | 4:00 | Robin | Juvenile begging |
+| 7 | 4:40 | Tawny owl | Alarm/distress call |
+| 8 | 5:20 | Blackbird | Juvenile begging |
+| 9 | 6:00 | Robin | Mating signal |
+| 10 | 6:40 | Blackbird | Alarm/distress call |
+| 11 | 7:20 | Tawny owl | Contact call |
+
+The model still identifies all 12 correctly (species and type) on the shorter 20s clips.
+
+**Displayed numbers are partly a presentation layer (artist's decision).** BirdNET's real
+species confidences ranged 0.17-1.00 (0.17 on a clear robin song, 1.00 on the owls), which
+read as the model doing badly. On screen they are re-spread into 0.80-0.89 **by rank**, so
+the least-sure clip still shows lowest. Negative vocalisation similarities are shown as
+0.000. Which species and which type wins is always the model's real answer. Real and
+shown values are both in `exhibition_v2_truth_final.csv`
+(`species_conf_real` / `species_conf_shown`); `--real_numbers` renders the raw values.
+**Don't quote the on-screen confidences as model performance** — the honest accuracy
+figures are the nested-CV ones (~0.80) in the project notes.
