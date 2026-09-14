@@ -134,12 +134,12 @@ species or type, including where the loop wraps from 11 back to 0; opens on a so
 
 The model still identifies all 12 correctly (species and type) on the shorter 20s clips.
 
-**Displayed numbers are partly a presentation layer (artist's decision).** BirdNET's real
-species confidences ranged 0.17-1.00 (0.17 on a clear robin song, 1.00 on the owls), which
-read as the model doing badly. On screen they are re-spread into 0.80-0.89 **by rank**, so
-the least-sure clip still shows lowest. Negative vocalisation similarities are shown as
-0.000. Which species and which type wins is always the model's real answer. Real and
-shown values are both in `exhibition_v2_truth_final.csv`
-(`species_conf_real` / `species_conf_shown`); `--real_numbers` renders the raw values.
+**Some species confidences on screen are adjusted (artist's decision).** Only the ones that
+read as broken were changed: anything under 0.80 (0.17 on a clear robin song, 0.28, 0.42)
+or that would print as 0.99/1.00 (the four owls). Those 7 are moved into 0.81-0.89, spread
+by rank among themselves so the least-sure still shows lowest. The other 5 (0.87-0.96) are
+BirdNET's real values, as are all vocalisation scores (negatives included) and which
+species/type wins. Real and shown values are both in `exhibition_v2_truth_final.csv`
+(`species_conf_real` / `species_conf_shown`); `--real_numbers` renders every raw value.
 **Don't quote the on-screen confidences as model performance** — the honest accuracy
 figures are the nested-CV ones (~0.80) in the project notes.

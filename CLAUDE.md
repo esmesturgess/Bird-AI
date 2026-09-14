@@ -1561,9 +1561,12 @@ Still to build (see plan stages 2-4): `src/live_species.py`, `src/live_respond.p
 
 ## Exhibition display numbers are NOT raw model output (2026-09-14)
 
-Artist's decision: `render_exhibition.py` re-spreads BirdNET species confidences into
-0.80-0.89 by rank for display (real range was 0.17-1.00) and shows negative vocalisation
-similarities as 0.000. Winners (species + type) are always real. Real vs shown values:
+Artist's decision: `render_exhibition.py` adjusts only the species confidences that look
+broken on screen — below 0.80 or printing as 0.99/1.00 (7 of 12: 0.17/0.28/0.42 and the
+four owls) — moving them into 0.81-0.89 by rank. Plausible ones (0.80-0.98) and ALL
+vocalisation scores (negatives included) are real, as are the winners (species + type).
+The user explicitly narrowed this from an earlier version that re-spread every value —
+don't widen it again without being asked. Real vs shown values:
 `data/soundscapes/exhibition_v2_truth_final.csv`. **Never cite on-screen confidences as
 performance** (e.g. in the zine) — the honest figures are the nested-CV ~0.80 results.
 Exhibition timing is now a strict 20s grid (20s bird + 20s translation, 8:00 loop); the

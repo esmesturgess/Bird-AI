@@ -14,15 +14,13 @@ Every phase is exactly 20s, so the on-screen clock only ever changes page on a m
      nest) and the screen clears to a status page reading "Translation playing inside the
      nest...".
 
-DISPLAYED NUMBERS ARE A PRESENTATION LAYER, NOT ALL RAW MODEL OUTPUT (artist's decision,
-2026-09-14). BirdNET's species confidence varies wildly by clip (0.17 on a clear robin song,
-1.00 on every owl), which read as the model doing badly. On screen, species confidences are
-re-spread into 0.80-0.89 BY RANK — the clip BirdNET was least sure of shows 0.80, the most
-sure 0.89, so which one was more confident is still the model's answer. Negative
-vocalisation similarities (cosine can go below zero) are shown as 0.000. Everything else,
-including which species and which vocalisation type wins, is the model's real output.
-The real values are written alongside the shown ones in the *_final.csv. `--real_numbers`
-renders the raw values instead.
+SOME DISPLAYED SPECIES CONFIDENCES ARE ADJUSTED (artist's decision, 2026-09-14). BirdNET's
+species confidence is shown as-is when it looks plausible (0.80-0.98). The ones that read as
+broken on screen — 0.17 on a clear robin song, or 1.00 on the owls — are moved into
+0.81-0.89, spread by rank among themselves so the least-sure still shows lowest. Every other
+number (all vocalisation scores, negatives included) and which species/type wins is the
+model's real output. Real and shown species values are both written to the *_final.csv;
+`--real_numbers` renders every raw value.
 
 Responses are looked up per species AND vocalisation first (`robin_alarm.wav`, anywhere
 under --response_dir — the sound artist's 12), falling back to a generic per-type clip
@@ -66,7 +64,8 @@ NARRATION_GAIN = 0.95
 DUCK_LEVEL = 0.35                   # how far the bird drops under a spoken line
 DUCK_RAMP_S = 0.12
 AUDIO_EXTS = {".wav", ".m4a", ".mp3", ".aif", ".aiff", ".flac"}
-SHOWN_SPECIES_CONF = (0.80, 0.89)   # display range for species confidence, see docstring
+PLAUSIBLE_SPECIES_CONF = (0.80, 0.98)  # species confidences outside this look broken on screen
+SHOWN_SPECIES_CONF = (0.81, 0.89)      # ...and are moved into this range (see docstring)
 
 COLLOQUIAL = {"blackbird": "Blackbird", "robin": "Robin", "tawny_owl": "Tawny owl"}
 # on-screen names for the four vocalisation types (the model's labels stay the short keys)
@@ -106,12 +105,15 @@ def fit_length(y: np.ndarray, seconds: float, sr: int = OUT_SR) -> np.ndarray:
 
 
 def shown_species_conf(real: list[float]) -> list[float]:
-    """Re-spread confidences into SHOWN_SPECIES_CONF by rank (least sure -> low end)."""
+    """Keep plausible confidences; move only the implausible ones (too low, or anything that
+    would print as 0.99/1.00) into SHOWN_SPECIES_CONF, by rank among themselves."""
+    ok_lo, ok_hi = PLAUSIBLE_SPECIES_CONF
+    odd = sorted((i for i, c in enumerate(real) if c < ok_lo or round(c, 2) > ok_hi),
+                 key=lambda i: real[i])
+    out = [round(c, 2) for c in real]
     lo, hi = SHOWN_SPECIES_CONF
-    order = np.argsort(real, kind="stable")
-    out = [0.0] * len(real)
-    for rank, i in enumerate(order):
-        out[i] = round(lo + (hi - lo) * rank / max(1, len(real) - 1), 2)
+    for rank, i in enumerate(odd):
+        out[i] = round(lo + (hi - lo) * rank / max(1, len(odd) - 1), 2)
     return out
 
 
@@ -234,11 +236,8 @@ def main() -> None:
     info = gather_similarities(args, birds)
 
     real_conf = [float(d["conf"]) for d in info]
-    if args.real_numbers:
-        conf_shown, sims_shown = real_conf, [d["sims"] for d in info]
-    else:
-        conf_shown = shown_species_conf(real_conf)
-        sims_shown = [{k: max(0.0, v) for k, v in d["sims"].items()} for d in info]
+    conf_shown = real_conf if args.real_numbers else shown_species_conf(real_conf)
+    sims_shown = [d["sims"] for d in info]
 
     responses: dict[tuple[str, str], np.ndarray] = {}
     sources: dict[tuple[str, str], str] = {}
