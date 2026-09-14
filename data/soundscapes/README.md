@@ -77,3 +77,31 @@ start (or let autostart handle) the main `exhibition_v2.mp4` loop.
 
 Deliberately NOT baked into the main loop — the gallery-facing video shouldn't repeat a
 countdown every 7 minutes. Rebuild with `python -m src.render_countdown`.
+
+## Nelson's responses are in (2026-09-14)
+
+The 12 species-specific translations from the sound artist replaced the 4 generic
+placeholders. Source WAVs (44.1 kHz / 24-bit stereo) are downloaded and renamed to
+`from_nelson/<species>_<vocalisation>.wav` — gitignored, since the master copies are on
+his Dropbox and the NUC only needs the rendered video. He delivered them between 19.1s
+and 22.1s long; `render_exhibition.py` fits every one to exactly **20s** (trimmed with a
+0.5s fade-out, or padded with silence). Downmixed to mono for the single nest speaker.
+
+The final mix is now 44.1 kHz / 192 kbps AAC (was 16 kHz, the classifier's rate, which
+cut everything above 8 kHz off his work). Total loop: 9.0 min (12 × (25s bird + 20s
+translation)).
+
+On-screen vocalisation names changed (the model's internal labels are unchanged):
+call → **Contact call**, song → **Mating signal**, alarm → **Alarm/distress call**,
+juvenile → **Juvenile begging**.
+
+Also in the delivery, NOT used yet: `Low frequency ambience.wav` (242s, stereo) — purpose
+to be confirmed.
+
+Rebuild:
+
+    python -m src.render_exhibition \
+      --soundscape data/soundscapes/exhibition_v2.flac \
+      --truth data/soundscapes/exhibition_v2_truth.csv \
+      --response_dir data/soundscapes/from_nelson \
+      --out data/soundscapes/exhibition_v2.mp4

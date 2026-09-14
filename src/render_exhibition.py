@@ -9,9 +9,17 @@ Each segment has two phases, back to back:
      the bird's emotions..." once the vocalisation-type scores are in. The bird audio ducks
      under each spoken line so the voice stays intelligible.
 
-  2. TRANSLATION (however long that clip is) — the response plays on the RIGHT channel
+  2. TRANSLATION (fixed length, 20s by default) — the response plays on the RIGHT channel
      (Speaker B, inside the nest) and the screen clears to a status page reading
      "Translation playing inside the nest...".
+
+Responses are looked up per species AND vocalisation first (`robin_alarm.wav`, anywhere
+under --response_dir — the sound artist's 12), falling back to a generic per-type clip
+(`alarm.m4a`) with a printed WARNING. Each is trimmed (with a fade-out) or padded with
+silence to exactly --response_seconds.
+
+Analysis runs at 16 kHz (what the classifier needs); the final MIX is 44.1 kHz so the
+response clips keep their full bandwidth rather than being cut off at 8 kHz.
 
 Narration is generated with macOS `say`, so this must be RENDERED ON A MAC — the NUC only
 ever plays the finished file.
@@ -19,7 +27,7 @@ ever plays the finished file.
     python -m src.render_exhibition \
         --soundscape data/soundscapes/exhibition_v2.flac \
         --truth data/soundscapes/exhibition_v2_truth.csv \
-        --response_dir data/response_sounds \
+        --response_dir data/soundscapes/from_nelson \
         --out data/soundscapes/exhibition_v2.mp4
 """
 from __future__ import annotations
@@ -39,13 +47,20 @@ from .render_visualisation import (
     BAR_CELLS, F_SM, F_MD, mel_image, gather_similarities,
 )
 
+OUT_SR = 44100                      # final mix rate; SR (16k) is for analysis only
 FADE_S = 0.05
+TRIM_FADE_S = 0.5                   # fade-out when a response is cut short
 NARRATION_VOICE = "Daniel"          # en_GB — these are all British birds
 NARRATION_GAIN = 0.95
 DUCK_LEVEL = 0.35                   # how far the bird drops under a spoken line
 DUCK_RAMP_S = 0.12
+AUDIO_EXTS = {".wav", ".m4a", ".mp3", ".aif", ".aiff", ".flac"}
 
 COLLOQUIAL = {"blackbird": "Blackbird", "robin": "Robin", "tawny_owl": "Tawny owl"}
+# on-screen names for the four vocalisation types (the model's labels stay the short keys)
+VOC_DISPLAY = {"call": "Contact call", "song": "Mating signal",
+               "alarm": "Alarm/distress call", "juvenile": "Juvenile begging"}
+VOC_W = max(len(v) for v in VOC_DISPLAY.values())
 
 # Fractions of the 25s bird phase. Retimed so the narration lands ON the thing it names:
 # the species is SPOKEN as its line appears, not before the bar that finds it.
@@ -58,13 +73,33 @@ T_VERDICT = 0.74                    # verdict line + "Adapting sounds..."
 _TTS_CACHE: dict[str, np.ndarray] = {}
 
 
-def _fade(y: np.ndarray) -> np.ndarray:
-    n = int(FADE_S * SR)
+def _fade(y: np.ndarray, sr: int = OUT_SR) -> np.ndarray:
+    n = int(FADE_S * sr)
     if len(y) > 2 * n:
         y = y.copy()
         y[:n] *= np.linspace(0, 1, n)
         y[-n:] *= np.linspace(1, 0, n)
     return y
+
+
+def fit_length(y: np.ndarray, seconds: float, sr: int = OUT_SR) -> np.ndarray:
+    """Trim (fading out the tail) or pad with silence to exactly `seconds`."""
+    n = int(round(seconds * sr))
+    if len(y) >= n:
+        y = y[:n].copy()
+        f = min(n, int(TRIM_FADE_S * sr))
+        y[-f:] *= np.linspace(1, 0, f)
+        return y
+    return np.concatenate([y, np.zeros(n - len(y), dtype=y.dtype)])
+
+
+def find_response(response_dir: Path, species: str, voc: str) -> tuple[Path | None, bool]:
+    """(path, is_species_specific). Prefers the artist's per-species clip."""
+    for stem, specific in ((f"{species}_{voc}", True), (voc, False)):
+        for p in sorted(response_dir.rglob(f"{stem}.*")):
+            if p.suffix.lower() in AUDIO_EXTS and not p.name.startswith("._"):
+                return p, specific
+    return None, False
 
 
 def tts(text: str) -> np.ndarray:
@@ -77,7 +112,7 @@ def tts(text: str) -> np.ndarray:
     import librosa
     tmp = Path(tempfile.mkstemp(suffix=".aiff")[1])
     subprocess.run(["say", "-v", NARRATION_VOICE, "-o", str(tmp), text], check=True)
-    y = _fade(librosa.load(str(tmp), sr=SR, mono=True)[0].astype(np.float32))
+    y = _fade(librosa.load(str(tmp), sr=OUT_SR, mono=True)[0].astype(np.float32))
     tmp.unlink(missing_ok=True)
     _TTS_CACHE[text] = y
     return y
@@ -91,12 +126,12 @@ def decision_lines(seg: int, species_sci: str, species_slug: str | None, voc: st
          (T_SPECIES, f"  {species_sci:<18s} {species_conf:.2f}"),
          (T_PROTO_HDR, "  Nearest vocalisation type:")]
     for i, k in enumerate(order):
-        bar = "#" * int(round(sims[k] * 34))
+        bar = "#" * int(round(sims[k] * 30))
         mark = "<--" if k == voc else "   "
         L.append((T_SCORE_0 + i * T_SCORE_STEP,
-                  f"      {k:<9s} {sims[k]:.3f}  {bar:<34s} {mark}"))
+                  f"      {VOC_DISPLAY.get(k, k):<{VOC_W}s} {sims[k]:.3f}  {bar:<30s} {mark}"))
     species_disp = COLLOQUIAL.get(species_slug or "", "Unknown")
-    voc_disp = voc.title() if voc and voc != "-" else "Unknown"
+    voc_disp = VOC_DISPLAY.get(voc, "Unknown")
     L.append((T_VERDICT, f"Species: {species_disp}  |  Vocalisation type: {voc_disp}"))
     return L
 
@@ -117,10 +152,10 @@ def translation_page(si: int, n_segments: int, prog: float) -> Image.Image:
     return im
 
 
-def duck(bird: np.ndarray, spans: list[tuple[int, int]]) -> np.ndarray:
+def duck(bird: np.ndarray, spans: list[tuple[int, int]], sr: int = OUT_SR) -> np.ndarray:
     """Drop the bird under each spoken line, with short ramps so it doesn't click."""
     gain = np.ones(len(bird), dtype=np.float32)
-    ramp = max(1, int(DUCK_RAMP_S * SR))
+    ramp = max(1, int(DUCK_RAMP_S * sr))
     for a, b in spans:
         a, b = max(0, a), min(len(bird), b)
         if b <= a:
@@ -140,6 +175,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--soundscape", type=Path, required=True, help="the BIRD-only track (left channel source)")
     p.add_argument("--truth", type=Path, required=True)
     p.add_argument("--response_dir", type=Path, default=Path("data/response_sounds"))
+    p.add_argument("--response_seconds", type=float, default=20.0,
+                   help="trim/pad every response to this length (0 = keep natural length)")
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--out_truth", type=Path, default=None)
     p.add_argument("--models_dir", type=Path, default=Path("models"))
@@ -155,22 +192,34 @@ def main() -> None:
     import librosa, imageio.v2 as imageio, imageio_ffmpeg, soundfile as sf
 
     truth = pd.read_csv(args.truth)
+    # 16k copy drives the classifier + spectrograms; 44.1k copy goes into the mix
     audio = librosa.load(str(args.soundscape), sr=SR, mono=True)[0]
-    n = int(args.segment_seconds * SR)
+    audio_hi = librosa.load(str(args.soundscape), sr=OUT_SR, mono=True)[0].astype(np.float32)
+    n, n_hi = int(args.segment_seconds * SR), int(args.segment_seconds * OUT_SR)
     birds = [audio[i:i + n] for i in range(0, len(audio), n)]
     birds = [s for s in birds if len(s) >= SR]
+    birds_hi = [audio_hi[i * n_hi:(i + 1) * n_hi] for i in range(len(birds))]
     assert len(birds) == len(truth), f"{len(birds)} audio segments vs {len(truth)} truth rows"
 
     print("classifying each segment for the real decision log ...", flush=True)
     info = gather_similarities(args, birds)
 
-    responses = {}
-    for voc in truth["vocalisation"].unique():
-        f = args.response_dir / f"{voc}.m4a"
-        if not f.exists():
-            raise SystemExit(f"no response clip for '{voc}': expected {f}")
-        responses[voc] = _fade(librosa.load(str(f), sr=SR, mono=True)[0].astype(np.float32))
-        print(f"  response[{voc}] = {f.name} ({len(responses[voc])/SR:.1f}s)", flush=True)
+    responses: dict[tuple[str, str], np.ndarray] = {}
+    sources: dict[tuple[str, str], str] = {}
+    for sp, voc in truth[["species", "vocalisation"]].drop_duplicates().itertuples(index=False):
+        path, specific = find_response(args.response_dir, sp, voc)
+        if path is None:
+            raise SystemExit(f"no response for {sp} {voc}: expected {sp}_{voc}.<ext> or "
+                             f"{voc}.<ext> under {args.response_dir}")
+        y = _fade(librosa.load(str(path), sr=OUT_SR, mono=True)[0].astype(np.float32))
+        natural = len(y) / OUT_SR
+        if args.response_seconds > 0:
+            y = fit_length(y, args.response_seconds)
+        responses[(sp, voc)] = y
+        sources[(sp, voc)] = str(path)
+        tag = "" if specific else "   WARNING: generic placeholder, no per-species clip found"
+        print(f"  {sp:10s} {voc:9s} <- {path.name} ({natural:.1f}s -> {len(y)/OUT_SR:.1f}s){tag}",
+              flush=True)
 
     specs = [mel_image(s) for s in birds]
     logs = [decision_lines(i, d["sci"] or "no match", d.get("species"), d["voc"] or "-",
@@ -184,12 +233,12 @@ def main() -> None:
     left_chunks, right_chunks, rows = [], [], []
     t_cursor = 0.0
 
-    for si, bird in enumerate(birds):
+    for si, bird in enumerate(birds_hi):
         d, lines = info[si], logs[si]
-        voc = truth.iloc[si]["vocalisation"]
-        resp = responses[voc]
+        sp, voc = truth.iloc[si]["species"], truth.iloc[si]["vocalisation"]
+        resp = responses[(sp, voc)]
 
-        # ---- phase 1 frames: analysis, unchanged except retimed to the narration ----
+        # ---- phase 1 frames: analysis, timed to the narration ----
         for f in range(bird_frames):
             prog = f / bird_frames
             im = Image.new("L", (W, H), 0)
@@ -218,7 +267,7 @@ def main() -> None:
             writer.append_data(np.array(im.convert("RGB")))
 
         # ---- phase 2 frames: the translation status page ----
-        resp_frames = max(1, int(round(len(resp) / SR * FPS)))
+        resp_frames = max(1, int(round(len(resp) / OUT_SR * FPS)))
         for f in range(resp_frames):
             writer.append_data(np.array(
                 translation_page(si, len(birds), f / resp_frames).convert("RGB")))
@@ -227,9 +276,8 @@ def main() -> None:
         narration = np.zeros(len(bird), dtype=np.float32)
         spans: list[tuple[int, int]] = []
         if not args.no_narration:
-            slug = d.get("species")
             cues = [(T_VOICE_DETECT, "Detecting species"),
-                    (T_SPECIES, COLLOQUIAL.get(slug or "", "Unknown species")),
+                    (T_SPECIES, COLLOQUIAL.get(d.get("species") or "", "Unknown species")),
                     (T_VERDICT, "Adapting sounds to the bird's emotions")]
             for frac, phrase in cues:
                 clip = tts(phrase)
@@ -247,23 +295,24 @@ def main() -> None:
 
         left_chunks += [left, np.zeros_like(resp)]
         right_chunks += [right, resp]
-        rows.append({"segment": si, "bird_start_s": t_cursor, "bird_duration_s": len(bird)/SR,
-                     "response_start_s": t_cursor + len(bird)/SR, "response_duration_s": len(resp)/SR,
-                     "species": truth.iloc[si]["species"], "vocalisation": voc})
-        t_cursor += len(bird)/SR + len(resp)/SR
-        print(f"  rendered segment {si} ({truth.iloc[si]['species']} {voc}, "
-              f"+{len(resp)/SR:.1f}s translation)", flush=True)
+        rows.append({"segment": si, "bird_start_s": t_cursor, "bird_duration_s": len(bird)/OUT_SR,
+                     "response_start_s": t_cursor + len(bird)/OUT_SR,
+                     "response_duration_s": len(resp)/OUT_SR, "species": sp, "vocalisation": voc,
+                     "response_file": Path(sources[(sp, voc)]).name})
+        t_cursor += len(bird)/OUT_SR + len(resp)/OUT_SR
+        print(f"  rendered segment {si} ({sp} {voc})", flush=True)
 
     writer.close()
 
     stereo = np.stack([np.concatenate(left_chunks), np.concatenate(right_chunks)], axis=1).astype(np.float32)
     audio_tmp = Path(tempfile.mkstemp(suffix=".wav")[1])
-    sf.write(audio_tmp, stereo, SR)
+    sf.write(audio_tmp, stereo, OUT_SR)
 
     ff_exe = imageio_ffmpeg.get_ffmpeg_exe()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run([ff_exe, "-y", "-loglevel", "error", "-i", str(tmp_video), "-i", str(audio_tmp),
-                    "-c:v", "copy", "-c:a", "aac", "-shortest", str(args.out)], check=True)
+                    "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", str(args.out)],
+                   check=True)
     tmp_video.unlink(missing_ok=True); audio_tmp.unlink(missing_ok=True)
 
     out_truth = args.out_truth or args.truth.with_name(args.truth.stem + "_final.csv")

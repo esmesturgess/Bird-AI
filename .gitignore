@@ -34,3 +34,7 @@ data/response_sounds/
 data/reviews/robin_listening_test_v1/audio/
 data/soundscapes/**/.DS_Store
 .DS_Store
+
+# The sound artist's source WAVs (24-bit stereo, ~67MB) — the master copy lives on his
+# Dropbox, and the NUC only needs the rendered exhibition_v2.mp4, not the stems.
+data/soundscapes/from_nelson/
