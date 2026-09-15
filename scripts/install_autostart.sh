@@ -19,8 +19,11 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 REPO="$(pwd)"
 
 # settings baked into the boot entry, so they survive without anyone typing them
+ENV_VARS=""
+[ -n "${AUDIO_DEVICE:-}" ] && ENV_VARS+=" AUDIO_DEVICE=${AUDIO_DEVICE}"
+[ -n "${BASS_BT_MAC:-}" ] && ENV_VARS+=" BASS_BT_MAC=${BASS_BT_MAC}"   # bass on Bluetooth
 ENV_PREFIX=""
-[ -n "${AUDIO_DEVICE:-}" ] && ENV_PREFIX="env AUDIO_DEVICE=${AUDIO_DEVICE} "
+[ -n "$ENV_VARS" ] && ENV_PREFIX="env${ENV_VARS} "
 
 mkdir -p "$HOME/.config/autostart"
 cat > "$HOME/.config/autostart/bird-installation.desktop" <<EOF

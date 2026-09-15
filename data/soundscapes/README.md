@@ -143,3 +143,15 @@ species/type wins. Real and shown values are both in `exhibition_v2_truth_final.
 (`species_conf_real` / `species_conf_shown`); `--real_numbers` renders every raw value.
 **Don't quote the on-screen confidences as model performance** — the honest accuracy
 figures are the nested-CV ones (~0.80) in the project notes.
+
+## Bass ambience on Bluetooth (2026-09-15)
+
+`bass_ambience.flac` is the sound artist's `Low frequency ambience.wav` (242.4s, 100% of its
+energy below 250 Hz) made into a seamless loop: the last 4s are crossfaded over the first
+(equal-power), since the source starts louder than it ends and a plain loop would jump.
+Result 238.4s, lossless FLAC — not AAC, whose start/end padding re-breaks the seam
+(measured: a tick at every loop). Rebuild with `python -m src.render_bass_loop --src <wav>`.
+
+It plays on a Bluetooth speaker alongside the video when `kiosk_play.sh` is given
+`BASS_BT_MAC` (setup in `scripts/README_NUC.md`). It loops independently of the 8:00
+video — as an ambient bed it doesn't need to line up with the birds.

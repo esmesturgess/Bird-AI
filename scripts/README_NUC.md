@@ -153,6 +153,33 @@ the installer with the jack's name, e.g.
 rather than a fixed pause — starting before it is up gives a silent video that never
 recovers.
 
+### Bass on a Bluetooth speaker (optional)
+
+The sound artist's low-frequency ambience (`data/soundscapes/bass_ambience.flac`, all of
+it below 250 Hz) can loop on a Bluetooth speaker while the video and birds carry on
+through the headphone jack. It's an ambient bed, so it loops on its own (every 3:58) and
+doesn't need to line up with the birds.
+
+1. Switch the speaker on and put it in pairing mode. On the NUC: **Menu → Bluetooth** →
+   find the speaker → pair/connect.
+2. Get its address — in a terminal: `bluetoothctl devices`. You'll see a line like
+   `Device AA:BB:CC:DD:EE:FF Speaker Name`; the `AA:BB:...` part is the address.
+3. Let it reconnect by itself after every boot: `bluetoothctl trust AA:BB:CC:DD:EE:FF`.
+4. Test it: `BASS_BT_MAC=AA:BB:CC:DD:EE:FF bash scripts/kiosk_play.sh` — bass should come
+   from the Bluetooth speaker only, video and birds from the wired speakers only.
+5. Make it permanent: `BASS_BT_MAC=AA:BB:CC:DD:EE:FF bash scripts/install_autostart.sh`
+   (add `AUDIO_DEVICE=...` in the same line too if you've pinned the jack).
+
+What it does by itself: keeps trying to connect the speaker every 5 seconds until it
+appears; pins the video to the headphone jack (Linux otherwise tends to make a newly
+connected Bluetooth speaker the default and pull everything onto it); and if the speaker
+drops out, stops the bass within ~3 seconds rather than letting Linux move it onto the
+wired speakers, then picks back up when the speaker returns.
+
+Worth checking with your speaker: some switch themselves off after a period without a
+connection, and small portable speakers reproduce very little below ~60 Hz — which is
+nearly half of this file.
+
 To swap in a different video later (a new soundscape, or once the sound artist's 12
 response clips are mixed in), either replace `data/soundscapes/exhibition_v2.mp4` in
 place, or point `kiosk_play.sh` at a new file with `VIDEO=path/to/new.mp4 bash
