@@ -13,10 +13,18 @@
 #
 # BASS_BT_MAC (optional) is a paired Bluetooth speaker's address. When set, the bass
 # ambience (data/soundscapes/bass_ambience.flac) loops on that speaker alongside the video,
-# and the video is pinned to the headphone jack — otherwise Linux tends to make a newly
+# and the video is kept on the headphone jack — otherwise Linux tends to make a newly
 # connected Bluetooth speaker the default output and pull the video's sound onto it too.
+#
+# When launched by autostart (no terminal), everything is logged to
+# ~/.cache/bird-installation.log — read it with:  cat ~/.cache/bird-installation.log
 set -u
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+LOG="${LOG:-$HOME/.cache/bird-installation.log}"
+if [ ! -t 1 ]; then mkdir -p "$(dirname "$LOG")"; exec >>"$LOG" 2>&1; fi
+log() { printf '%s  %s\n' "$(date '+%F %T')" "$*"; }
+log "---- kiosk_play.sh starting ----"
 
 COUNTDOWN="${COUNTDOWN:-data/soundscapes/countdown.mp4}"
 VIDEO="${VIDEO:-data/soundscapes/exhibition_v2.mp4}"
@@ -32,6 +40,7 @@ for _ in $(seq 1 60); do
   sleep 1
 done
 sleep 2
+log "audio server up"
 
 # stop the screen blanking / lock / power-saving that would otherwise black out an
 # unattended display after a few minutes. Harmless to run repeatedly; ignore failures
@@ -41,17 +50,28 @@ gsettings set org.cinnamon.desktop.screensaver lock-enabled false 2>/dev/null
 gsettings set org.cinnamon.desktop.session idle-delay 0 2>/dev/null
 gsettings set org.cinnamon.settings-daemon.plugins.power sleep-display-ac 0 2>/dev/null
 
-[ -f "$VIDEO" ] || { echo "kiosk_play.sh: video not found: $VIDEO" >&2; exit 1; }
+[ -f "$VIDEO" ] || { log "video not found: $VIDEO"; exit 1; }
 
-# with a Bluetooth speaker in play, keep the video on the headphone jack explicitly
-if [ -n "$BASS_BT_MAC" ] && [ -z "${AUDIO_DEVICE:-}" ]; then
-  jack="$(pactl list short sinks 2>/dev/null | awk '$2 ~ /analog/ {print $2; exit}')"
+# ---- keep the video on the headphone jack when a Bluetooth speaker is involved ----
+jack_sink() { pactl list short sinks 2>/dev/null | awk '$2 ~ /analog/ {print $2; exit}'; }
+jack=""
+if [ -n "$BASS_BT_MAC" ]; then
+  # At boot the audio server answers BEFORE the built-in sound card has registered its
+  # outputs, so looking once finds nothing — that let the video follow the Bluetooth
+  # speaker when it connected (worked when run by hand, failed from autostart). Wait for
+  # the jack properly, then make it the DEFAULT as well as pinning the video to it, so
+  # nothing can drift onto the speaker.
+  for _ in $(seq 1 30); do jack="$(jack_sink)"; [ -n "$jack" ] && break; sleep 1; done
   if [ -n "$jack" ]; then
-    AUDIO_DEVICE="pulse/$jack"
+    pactl set-default-sink "$jack"
+    [ -z "${AUDIO_DEVICE:-}" ] && AUDIO_DEVICE="pulse/$jack"
+    log "headphone jack: $jack (video pinned to it, and made the default output)"
   else
-    echo "kiosk_play.sh: WARNING no headphone-jack output found; video uses the default" >&2
+    log "WARNING no headphone-jack output after 30s — video will use the default. Outputs seen:"
+    pactl list short sinks
   fi
 fi
+log "video audio device: ${AUDIO_DEVICE:-system default}"
 
 INPUT_CONF="$(pwd)/scripts/mpv_kiosk.conf"
 # --no-input-default-bindings turns off everything mpv normally binds (seek, quit,
@@ -65,6 +85,7 @@ MPV_KIOSK=(--fullscreen --no-osc --no-input-default-bindings --input-conf="$INPU
 if [ "${SKIP_COUNTDOWN:-0}" != "1" ] && [ -f "$COUNTDOWN" ]; then
   # plays ONCE (no --loop-file) and returns when it finishes — this is the one moment
   # someone needs to be there to press play on the separate raw-sound speaker, at GO
+  log "countdown"
   mpv "${MPV_KIOSK[@]}" "$COUNTDOWN"
 fi
 
@@ -82,6 +103,9 @@ bass_loop() {
       sleep 5
       continue
     fi
+    # a speaker (re)connecting can grab the default output — put it back on the jack
+    [ -n "$jack" ] && pactl set-default-sink "$jack"
+    log "bass: playing on $sink"
     mpv --no-video --loop-file=inf --really-quiet --no-terminal \
         --audio-device="pulse/$sink" "$BASS" &
     pid=$!
@@ -92,6 +116,7 @@ bass_loop() {
       [ -n "$(bt_sink)" ] || kill "$pid" 2>/dev/null
     done
     wait "$pid" 2>/dev/null
+    log "bass: speaker gone, waiting for it to come back"
     sleep 2
   done
 }
@@ -104,8 +129,10 @@ if [ -n "$BASS_BT_MAC" ]; then
     set +m
     trap 'kill -- -"$BASS_PID" 2>/dev/null' EXIT INT TERM
   else
-    echo "kiosk_play.sh: WARNING bass file not found: $BASS" >&2
+    log "WARNING bass file not found: $BASS"
   fi
 fi
 
+log "exhibition loop"
 mpv --loop-file=inf "${MPV_KIOSK[@]}" "$VIDEO"
+log "video stopped"

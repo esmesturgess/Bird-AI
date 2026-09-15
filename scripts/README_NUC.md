@@ -171,10 +171,15 @@ doesn't need to line up with the birds.
    (add `AUDIO_DEVICE=...` in the same line too if you've pinned the jack).
 
 What it does by itself: keeps trying to connect the speaker every 5 seconds until it
-appears; pins the video to the headphone jack (Linux otherwise tends to make a newly
+appears; waits for the headphone jack to register at boot, then pins the video to it
+and makes it the default output (Linux otherwise tends to make a newly
 connected Bluetooth speaker the default and pull everything onto it); and if the speaker
 drops out, stops the bass within ~3 seconds rather than letting Linux move it onto the
 wired speakers, then picks back up when the speaker returns.
+
+**If the sound goes to the wrong place after a restart,** the startup is logged — run
+`cat ~/.cache/bird-installation.log` and it says which output it found for the jack,
+where the video was sent, and when the speaker connected.
 
 Worth checking with your speaker: some switch themselves off after a period without a
 connection, and small portable speakers reproduce very little below ~60 Hz — which is
