@@ -111,8 +111,8 @@ Rebuild:
 **Every phase is now exactly 20s** — bird analysis 20s, translation 20s — so each segment
 is 40s, every page change lands on a multiple of 20, and the loop is 8:00. The bird track
 (`exhibition_v2.flac`) was rebuilt as 12 × 20s by taking the first 20s of each old 25s
-clip, with a 0.3s fade-out. The on-screen clock now counts real elapsed time continuously
-across BOTH pages (it used to show only bird time and skip the translations).
+clip, with a 0.3s fade-out. Nothing on screen counts any more — no segment number, no clock, no `--segment NN` in
+the log — so visitors can't tell where the 8-minute loop restarts.
 
 **Running order** — each block of four has one of every type; no neighbours share a
 species or type, including where the loop wraps from 11 back to 0; opens on a song:

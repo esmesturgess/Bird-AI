@@ -1,7 +1,7 @@
 """Build the final exhibition asset: stereo audio + narrated visualisation, muxed to video.
 
-Every phase is exactly 20s, so the on-screen clock only ever changes page on a multiple of
-20. Each segment is two phases, back to back:
+Every phase is exactly 20s. NOTHING ON SCREEN COUNTS — no segment number, no clock, no
+`--segment NN` — so visitors can't tell where the loop restarts. Each segment is two phases, back to back:
 
   1. BIRD (20s) — the raw call plays on the LEFT channel while the analysis runs on screen.
      A synthesised voice narrates it, timed to the visuals and centred across both
@@ -146,7 +146,7 @@ def decision_lines(seg: int, species_sci: str, species_slug: str | None, voc: st
                    sims: dict[str, float], species_conf: float) -> list[tuple[float, str]]:
     """(fraction elapsed, line) — the log, retimed to match the spoken narration."""
     order = sorted(sims, key=lambda k: -sims[k])
-    L = [(T_CMD, f"$ classify --segment {seg:02d}"),
+    L = [(T_CMD, "$ classify"),
          (T_SPECIES, f"  {species_sci:<18s} {species_conf:.2f}"),
          (T_PROTO_HDR, "  Nearest vocalisation type:")]
     for i, k in enumerate(order):
@@ -160,16 +160,10 @@ def decision_lines(seg: int, species_sci: str, species_slug: str | None, voc: st
     return L
 
 
-def header(dr: ImageDraw.ImageDraw, si: int, n_segments: int, t: float) -> None:
-    dr.text((MARGIN, 34), f"SEGMENT {si:02d} / {n_segments-1:02d}", font=F_MD, fill=150)
-    dr.text((W - MARGIN - 210, 34), f"t = {t:6.1f} s", font=F_MD, fill=150)
-
-
-def translation_page(si: int, n_segments: int, prog: float, t: float) -> Image.Image:
+def translation_page(prog: float) -> Image.Image:
     """Phase 2: analysis panel cleared, one status line, progress through the response."""
     im = Image.new("L", (W, H), 0)
     dr = ImageDraw.Draw(im)
-    header(dr, si, n_segments, t)
     dr.line([MARGIN, TERM_TOP - 18, W - MARGIN, TERM_TOP - 18], fill=70)
     y = TERM_TOP
     dr.text((MARGIN, y), "$ translate --to nest", font=F_MD, fill=205); y += LINE_H + 8
@@ -279,7 +273,6 @@ def main() -> None:
             prog = f / bird_frames
             im = Image.new("L", (W, H), 0)
             dr = ImageDraw.Draw(im)
-            header(dr, si, len(birds), t_cursor + prog * bird_s)
             revealed_w = max(1, int(prog * spec_w))
             im.paste(specs[si].crop((0, 0, revealed_w, specs[si].height)), (MARGIN, SPEC_TOP))
             dr.rectangle([MARGIN, SPEC_TOP, W - MARGIN, SPEC_BOT], outline=90)
@@ -304,8 +297,7 @@ def main() -> None:
         resp_frames = max(1, int(round(resp_s * FPS)))
         for f in range(resp_frames):
             prog = f / resp_frames
-            writer.append_data(np.array(translation_page(
-                si, len(birds), prog, t_cursor + bird_s + prog * resp_s).convert("RGB")))
+            writer.append_data(np.array(translation_page(prog).convert("RGB")))
 
         # ---- narration, placed on the same clock as the visuals ----
         narration = np.zeros(len(bird), dtype=np.float32)

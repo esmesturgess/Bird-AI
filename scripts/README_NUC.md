@@ -135,6 +135,24 @@ in the Login Window settings (a system login file, worth doing by hand rather th
 scripted blind on hardware nobody's tested it on). Once that's set: power on → desktop
 loads → video starts → loops. No monitor-as-keyboard, no command to remember.
 
+**Booting when the power comes on, with no button press.** If the installation is switched
+on at the wall, the NUC has to start by itself when power arrives — that's a BIOS setting,
+not something a script can change. Restart, tap **F2** at the Intel logo, find **Power →
+After Power Failure** (on some firmware it's under Advanced → Power) and set it to **Power
+On**. **F10** to save. Then: wall switch on → NUC boots → logs in → video starts.
+
+**Making sure the sound comes out of the 3.5mm jack.** With a monitor on HDMI, the NUC may
+send audio to the monitor's speakers instead of the jack. Set it once in **Menu → Sound →
+Output** (choose the headphones/analogue output) — it's remembered across reboots. If it
+ever reverts, pin it for good: list the names with `mpv --audio-device=help`, then re-run
+the installer with the jack's name, e.g.
+`AUDIO_DEVICE='pipewire/alsa_output.pci-0000_00_1b.0.analog-stereo' bash scripts/install_autostart.sh`
+(that exact name is an example — copy the one your NUC prints).
+
+`kiosk_play.sh` also waits for the sound system to be ready before starting (up to 60s),
+rather than a fixed pause — starting before it is up gives a silent video that never
+recovers.
+
 To swap in a different video later (a new soundscape, or once the sound artist's 12
 response clips are mixed in), either replace `data/soundscapes/exhibition_v2.mp4` in
 place, or point `kiosk_play.sh` at a new file with `VIDEO=path/to/new.mp4 bash
