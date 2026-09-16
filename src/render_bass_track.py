@@ -22,7 +22,8 @@ LEVELS are set in two steps (artist's direction, 2026-09-16):
      silence. The target is the median of the twelve, so overall loudness barely moves.
 
   2. GRADE by call type on top of that: juvenile well down, contact call and mating signal
-     down a little, alarm slightly up. Retune with --gain_db, e.g.
+     down, alarm up — a deliberate 10 dB spread from the softest type to the loudest.
+     Retune with --gain_db, e.g.
      `--gain_db juvenile=-7,alarm=+2`; anything not named keeps its default below.
      --no_match skips step 1 and leaves the artist's own relative levels alone.
 
@@ -47,7 +48,12 @@ SOUNDING = 1e-4          # above this counts as "the clip is playing", not padde
 
 # on-screen names: juvenile = "Juvenile begging", call = "Contact call",
 # song = "Mating signal", alarm = "Alarm/distress call"
-GAIN_DB = {"juvenile": -5.0, "call": -2.0, "song": -2.0, "alarm": +1.0}
+GAIN_DB = {"juvenile": -8.0, "call": -3.0, "song": -3.0, "alarm": +2.0}
+# Widened 2026-09-16 at the artist's request (alarm bassier, juvenile weaker). The whole
+# set sits 1 dB lower than the literal +3/-7 asked for: that version peaked at -0.1 dB on
+# the tawny owl alarm, i.e. no headroom at all. Contrast is identical either way — alarm
+# 5 dB above contact/mating, 10 dB above juvenile — so this trades 1 dB of loudness,
+# recoverable on the speaker volume, for 1 dB of safety.
 
 
 def parse_gains(spec: str | None) -> dict[str, float]:

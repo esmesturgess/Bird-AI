@@ -154,20 +154,26 @@ heard only under a translation, never over the loading page. Built with
 all 12 analysis windows and sounding in all 12 translation windows.
 
 **Levels are set in two steps** (artist's direction, 2026-09-16). First every clip is
-matched to the same loudness — as delivered they ranged over 4.0 dB, and within a single
+matched to the same loudness - as delivered they ranged over 4.0 dB, and within a single
 call type by up to 3.7 dB (blackbird contact call vs robin contact call), so the same kind
 of call sounded different depending on the bird. The target is the median of the twelve
-(−17.6 dB), so overall loudness barely moves. Then each call type is graded:
+(-17.6 dB). Then each call type is graded, to a deliberate 10 dB spread:
 
 | call type | grade | final level | the three birds |
 |---|---|---|---|
-| Alarm/distress call | +1 dB | −16.7 dB | within 0.09 dB |
-| Contact call | −2 dB | −19.7 dB | within 0.09 dB |
-| Mating signal | −2 dB | −19.7 dB | within 0.06 dB |
-| Juvenile begging | −5 dB | −22.7 dB | within 0.08 dB |
+| Alarm/distress call | +2 dB | -15.7 dB | within 0.09 dB |
+| Contact call | -3 dB | -20.7 dB | within 0.09 dB |
+| Mating signal | -3 dB | -20.7 dB | within 0.06 dB |
+| Juvenile begging | -8 dB | -25.7 dB | within 0.08 dB |
 
-Alarm ends up 6.0 dB above juvenile and 3.0 dB above the other two; peak is −2.1 dB, so
-nothing clips. Retune without touching anything else: `--gain_db juvenile=-7,alarm=+2`
+Alarm ends up 10.0 dB above juvenile and 5.0 dB above the other two; peak -1.1 dB.
+
+The literal request was alarm +3 / juvenile -7, but that peaked at -0.1 dB on the tawny
+owl alarm - no headroom, so any downstream boost or speaker processing could distort it.
+Shifting the whole set down 1 dB gives identical contrast with 1.1 dB of safety; the
+missing decibel is recoverable on the speaker's own volume.
+
+Retune without touching anything else: `--gain_db juvenile=-7,alarm=+2`
 changes the grading, `--base_db` the level everything is matched to, and `--no_match`
 keeps the artist's own relative levels instead.
 
