@@ -161,16 +161,24 @@ video and silent during every analysis page, so bass is heard only under a trans
 Both start together and so stay in step; if the speaker connects late or drops out, the
 bass restarts at the video's current position, not from the beginning.
 
-You can check the whole two-output arrangement on any machine before touching the NUC —
-headphones standing in for the wired speakers, plus a Bluetooth speaker:
+You can check the whole arrangement on any machine before touching the NUC — the picture
+in a window, headphones standing in for the wired speakers, plus a Bluetooth speaker:
 
 ```bash
 python scripts/test_two_outputs.py --list
-python scripts/test_two_outputs.py --main "Headphones" --bass "<speaker name>"
+python scripts/test_two_outputs.py --main "External Headphones" --bass "JBL"
+python scripts/test_two_outputs.py --main "External Headphones" --bass "JBL" --mix
 ```
 
-It plays both, started together and looping, and prints what should be audible each
-second, so you can hear whether the bass only ever appears under a translation.
+Everything starts together and loops, the picture follows the audio position, and a
+caption under the video says whether bass should be sounding — so you can hear whether it
+only ever appears under a translation. Esc or closing the window stops it.
+
+`--mix` matters on headphones. The exhibition is genuinely split: birds and narration on
+the left (the speaker outside the nest), translations on the right (inside it). On
+headphones that puts the birds in your left ear only, and leaves the left ear silent
+through every translation — which sounds like the birds have disappeared. `--mix` sums
+both sides into both ears; leave it off when you want to check the split itself.
 
 1. Switch the speaker on and put it in pairing mode. On the NUC: **Menu → Bluetooth** →
    find the speaker → pair/connect.

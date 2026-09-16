@@ -1,15 +1,23 @@
-"""Check the two-output setup on any machine — no NUC, no wiring needed.
+"""Check the whole installation on any machine — picture, both outputs, no NUC needed.
 
-Plays the exhibition audio out of one device (headphones, standing in for the wired
-speakers) and the bass track out of another (a Bluetooth speaker), started together and
-looping, exactly as the installation does. Prints what SHOULD be audible each second, so
-you can check by ear that the bass only ever appears under a translation.
+Shows the video in a window, plays the exhibition audio out of one device (headphones,
+standing in for the wired speakers) and the bass out of another (a Bluetooth speaker),
+all started together and looping, exactly as the installation does. The picture follows
+the audio, so what you see is always what you are hearing.
 
     python scripts/test_two_outputs.py --list
-    python scripts/test_two_outputs.py --main "Headphones" --bass "JBL"
+    python scripts/test_two_outputs.py --main "External Headphones" --bass "JBL"
+    python scripts/test_two_outputs.py --main "External Headphones" --bass "JBL" --mix
 
 --main/--bass take a device number from --list, or any part of its name.
-Ctrl+C to stop.
+
+--mix matters on HEADPHONES. The exhibition is genuinely split left/right — birds and
+narration on the left (the speaker outside the nest), translations on the right (the
+speaker inside it) — so on headphones the birds are in your left ear only, and during a
+translation the left ear is silent. That can sound like the birds have vanished. --mix
+sums both sides into both ears so you hear everything; leave it off to check the split.
+
+--no_video plays audio only. Close the window or press Ctrl+C to stop.
 """
 from __future__ import annotations
 
@@ -43,7 +51,6 @@ def pick(spec: str) -> int:
     if not hits:
         raise SystemExit(f"no output device matching {spec!r} — run --list")
     if len(hits) > 1:
-        import sounddevice as sd
         names = ", ".join(f"{i} ({sd.query_devices()[i]['name']})" for i in hits)
         raise SystemExit(f"{spec!r} matches several devices: {names} — use the number")
     return hits[0]
@@ -74,6 +81,9 @@ def main() -> None:
     p.add_argument("--bass_file", type=Path, default=Path("data/soundscapes/bass_track.flac"))
     p.add_argument("--truth", type=Path, default=Path("data/soundscapes/exhibition_v2_truth_final.csv"))
     p.add_argument("--start_at", type=float, default=0.0, help="skip ahead, in seconds")
+    p.add_argument("--mix", action="store_true", help="sum left+right into both ears (for headphones)")
+    p.add_argument("--no_video", action="store_true", help="audio only, no window")
+    p.add_argument("--scale", type=float, default=0.75, help="window size, 1.0 = full 1280x720")
     args = p.parse_args()
 
     if args.list:
@@ -85,6 +95,9 @@ def main() -> None:
     import pandas as pd
 
     main_audio, bass_audio = load_audio(args.main_file), load_audio(args.bass_file)
+    if args.mix:                                      # both ears hear everything
+        mono = main_audio.mean(axis=1, keepdims=True)
+        main_audio = np.repeat(mono, 2, axis=1).astype(np.float32)
     if abs(len(main_audio) - len(bass_audio)) > SR:
         print(f"WARNING the two tracks are different lengths "
               f"({len(main_audio)/SR:.1f}s vs {len(bass_audio)/SR:.1f}s) — they will drift apart",
@@ -103,39 +116,101 @@ def main() -> None:
                 end = i + frames
                 if end <= len(audio):
                     out[:] = audio[i:end]
-                else:                                   # wrap round for a seamless loop
+                else:                                 # wrap round for a seamless loop
                     first = len(audio) - i
                     out[:first], out[first:] = audio[i:], audio[:frames - first]
                 pos[key] += frames
         return cb
 
-    streams = [sd.OutputStream(device=pick(args.main), samplerate=SR, channels=2,
+    main_dev, bass_dev = pick(args.main), pick(args.bass)
+    streams = [sd.OutputStream(device=main_dev, samplerate=SR, channels=2,
                                callback=make_cb("main", main_audio)),
-               sd.OutputStream(device=pick(args.bass), samplerate=SR, channels=2,
+               sd.OutputStream(device=bass_dev, samplerate=SR, channels=2,
                                callback=make_cb("bass", bass_audio))]
-    print(f"main : {sd.query_devices()[pick(args.main)]['name']}  <- birds, narration, translations")
-    print(f"bass : {sd.query_devices()[pick(args.bass)]['name']}  <- bass only")
-    print("\nBluetooth runs ~0.1-0.3s behind a wired output; a small, steady lag is expected.\n")
+    print(f"main : {sd.query_devices()[main_dev]['name']}  <- birds, narration, translations"
+          f"{' (mixed to both ears)' if args.mix else ' (birds LEFT, translations RIGHT)'}")
+    print(f"bass : {sd.query_devices()[bass_dev]['name']}  <- bass only, under translations")
+    print("\nBluetooth runs ~0.1-0.3s behind a wired output; a small, steady lag is expected.")
 
-    for s in streams:                                   # start together
+    def phase_at(t: float) -> str:
+        row = truth[truth.bird_start_s <= t].tail(1)
+        if not len(row):
+            return ""
+        r = row.iloc[0]
+        what = ("TRANSLATION — bass should be playing" if t >= r.response_start_s
+                else "analysis — bass should be SILENT")
+        return f"{int(t)//60}:{int(t)%60:02d}   {int(r.segment)+1:2d}/12  {r.species} {r.vocalisation}   |   {what}"
+
+    for s in streams:                                 # start together
         s.start()
+
+    if args.no_video:
+        try:
+            while True:
+                with lock:
+                    t = pos["main"] / SR % (len(main_audio) / SR)
+                print("\r  " + phase_at(t) + "    ", end="", flush=True)
+                time.sleep(0.25)
+        except KeyboardInterrupt:
+            print("\nstopped.")
+        finally:
+            for s in streams:
+                s.stop(); s.close()
+        return
+
+    # ---- picture, driven by the audio position so the two can't drift ----
+    import tkinter as tk
+    import imageio.v2 as imageio
+    from PIL import Image, ImageTk
+
+    reader = imageio.get_reader(str(args.main_file))
+    meta = reader.get_meta_data()
+    fps = float(meta.get("fps", 12))
+    size = (int(1280 * args.scale), int(720 * args.scale))
+
+    root = tk.Tk()
+    root.title("Bird Translation — installation test")
+    root.configure(bg="black")
+    panel = tk.Label(root, bg="black"); panel.pack()
+    caption = tk.Label(root, bg="black", fg="white", font=("Menlo", 13), pady=6)
+    caption.pack(fill="x")
+    state = {"frame": -1, "img": None, "running": True}
+
+    def close():
+        state["running"] = False
+        root.after(50, root.destroy)
+    root.protocol("WM_DELETE_WINDOW", close)
+    root.bind("<Escape>", lambda _e: close())
+
+    def tick():
+        if not state["running"]:
+            return
+        with lock:
+            t = pos["main"] / SR % (len(main_audio) / SR)
+        want = int(t * fps)
+        if want != state["frame"]:
+            try:
+                frame = reader.get_data(want)         # seeks only when the position jumps
+                img = Image.fromarray(frame).resize(size, Image.BILINEAR)
+                state["img"] = ImageTk.PhotoImage(img)     # keep a reference or it vanishes
+                panel.configure(image=state["img"])
+                state["frame"] = want
+            except Exception as e:
+                print(f"\n  [video {type(e).__name__}: {e}]", file=sys.stderr)
+        caption.configure(text=phase_at(t))
+        root.after(int(1000 / fps / 2), tick)         # poll twice per frame, no need to be exact
+
+    tick()
     try:
-        while True:
-            with lock:
-                t = pos["main"] / SR % (len(main_audio) / SR)
-            row = truth[(truth.bird_start_s <= t)].tail(1)
-            if len(row):
-                r = row.iloc[0]
-                phase = ("TRANSLATION — bass should be playing"
-                         if t >= r.response_start_s else "analysis — bass should be SILENT")
-                print(f"\r  {int(t)//60}:{int(t)%60:02d}  segment {int(r.segment)+1:2d} "
-                      f"{r.species} {r.vocalisation:9s} | {phase}   ", end="", flush=True)
-            time.sleep(0.25)
+        root.mainloop()
     except KeyboardInterrupt:
-        print("\nstopped.")
+        pass
     finally:
+        state["running"] = False
         for s in streams:
             s.stop(); s.close()
+        reader.close()
+        print("stopped.")
 
 
 if __name__ == "__main__":

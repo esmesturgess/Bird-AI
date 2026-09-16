@@ -179,5 +179,7 @@ Superseded: `bass_ambience.flac` (a continuous 3:58 bed made from `Low frequency
 ambience.wav`) and `src/render_bass_loop.py` — removed once the real, per-translation bass
 clips arrived. Both are recoverable from git history.
 
-To check the two outputs on any machine, with headphones and a Bluetooth speaker and no
-NUC: `python scripts/test_two_outputs.py --list`, then `--main <headphones> --bass <speaker>`.
+To check all of it on any machine, with headphones and a Bluetooth speaker and no NUC:
+`python scripts/test_two_outputs.py --list`, then `--main <headphones> --bass <speaker>` —
+picture in a window, the two outputs split as they will be in the room. Add `--mix` on
+headphones, or the left/right split makes the birds sound absent in one ear.
