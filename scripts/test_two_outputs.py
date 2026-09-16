@@ -9,7 +9,11 @@ the audio, so what you see is always what you are hearing.
     python scripts/test_two_outputs.py --main "External Headphones" --bass "JBL"
     python scripts/test_two_outputs.py --main "External Headphones" --bass "JBL" --mix
 
---main/--bass take a device number from --list, or any part of its name.
+--main/--bass take a device number from --list, any part of its name, or the word
+`default`, meaning whatever the system's sound settings are currently sending audio to.
+On macOS, picking a Bluetooth speaker by name sometimes opens without error yet produces
+no sound; setting it as the system output and passing `--bass default` goes through the
+same path as every other app and works when the by-name route doesn't.
 
 --mix matters on HEADPHONES. The exhibition is genuinely split left/right — birds and
 narration on the left (the speaker outside the nest), translations on the right (the
@@ -42,8 +46,19 @@ def list_devices() -> None:
             print(f"{i:>3}  {d['max_output_channels']:>7}  {d['name']}")
 
 
-def pick(spec: str) -> int:
+def dev_name(idx: int | None) -> str:
+    """Name of a device index, or of whatever macOS/Linux is currently sending sound to."""
     import sounddevice as sd
+    if idx is None:
+        return f"{sd.query_devices(kind='output')['name']} [system default output]"
+    return sd.query_devices()[idx]["name"]
+
+
+def pick(spec: str) -> int | None:
+    """Device index, or None meaning 'whatever the system is set to'."""
+    import sounddevice as sd
+    if spec.strip().lower() == "default":
+        return None
     if spec.isdigit():
         return int(spec)
     hits = [i for i, d in enumerate(sd.query_devices())
@@ -127,9 +142,9 @@ def main() -> None:
                                callback=make_cb("main", main_audio)),
                sd.OutputStream(device=bass_dev, samplerate=SR, channels=2,
                                callback=make_cb("bass", bass_audio))]
-    print(f"main : {sd.query_devices()[main_dev]['name']}  <- birds, narration, translations"
+    print(f"main : {dev_name(main_dev)}  <- birds, narration, translations"
           f"{' (mixed to both ears)' if args.mix else ' (birds LEFT, translations RIGHT)'}")
-    print(f"bass : {sd.query_devices()[bass_dev]['name']}  <- bass only, under translations")
+    print(f"bass : {dev_name(bass_dev)}  <- bass only, under translations")
     print("\nBluetooth runs ~0.1-0.3s behind a wired output; a small, steady lag is expected.")
 
     def phase_at(t: float) -> str:
