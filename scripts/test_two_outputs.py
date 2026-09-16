@@ -171,6 +171,9 @@ def main() -> None:
     root = tk.Tk()
     root.title("Bird Translation — installation test")
     root.configure(bg="black")
+    # a python window on macOS opens BEHIND everything else, which looks like "no video"
+    root.lift(); root.attributes("-topmost", True); root.focus_force()
+    root.after(800, lambda: root.attributes("-topmost", False))
     panel = tk.Label(root, bg="black"); panel.pack()
     caption = tk.Label(root, bg="black", fg="white", font=("Menlo", 13), pady=6)
     caption.pack(fill="x")
