@@ -207,6 +207,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--birdnet_binary", default="./.venv/bin/birdnet-analyze")
     p.add_argument("--sims_cache", type=Path, default=Path("data/soundscapes/_sims_cache.json"))
     p.add_argument("--no_narration", action="store_true", help="build without the spoken voice")
+    p.add_argument("--no_match_responses", action="store_true",
+                   help="keep the artist's own relative levels between translations")
+    p.add_argument("--response_base_db", type=float,
+                   help="level to match translations to (default: their median)")
     p.add_argument("--real_numbers", action="store_true",
                    help="show the model's raw confidences instead of the display layer")
     return p.parse_args()
@@ -233,22 +237,42 @@ def main() -> None:
     conf_shown = real_conf if args.real_numbers else shown_species_conf(real_conf)
     sims_shown = [d["sims"] for d in info]
 
-    responses: dict[tuple[str, str], np.ndarray] = {}
-    sources: dict[tuple[str, str], str] = {}
+    # load every response first, so their levels can be matched to each other. As delivered
+    # they spanned 17.9 dB (tawny owl mating -11.6, robin alarm -29.5): the quiet ones sit
+    # well below the birds and are nearly inaudible in a room. Matching puts them on the
+    # same footing; --no_match_responses keeps the artist's own relative levels.
+    raw: dict[tuple[str, str], tuple[np.ndarray, Path, bool]] = {}
     for sp, voc in truth[["species", "vocalisation"]].drop_duplicates().itertuples(index=False):
         path, specific = find_response(args.response_dir, sp, voc)
         if path is None:
             raise SystemExit(f"no response for {sp} {voc}: expected {sp}_{voc}.<ext> or "
                              f"{voc}.<ext> under {args.response_dir}")
         y = _fade(librosa.load(str(path), sr=OUT_SR, mono=True)[0].astype(np.float32))
+        raw[(sp, voc)] = (y, path, specific)
+
+    def _rms_db(y: np.ndarray) -> float:
+        live = y[np.abs(y) > 1e-4]
+        return 20 * float(np.log10(max(float(np.sqrt(np.mean(live ** 2))) if len(live) else 0.0, 1e-9)))
+
+    levels = {k: _rms_db(v[0]) for k, v in raw.items()}
+    base = args.response_base_db if args.response_base_db is not None else float(np.median(list(levels.values())))
+    if not args.no_match_responses:
+        print(f"  matching every translation to {base:.1f} dB "
+              f"(as delivered they spanned {max(levels.values()) - min(levels.values()):.1f} dB)")
+
+    responses: dict[tuple[str, str], np.ndarray] = {}
+    sources: dict[tuple[str, str], str] = {}
+    for (sp, voc), (y, path, specific) in raw.items():
+        gain = 0.0 if args.no_match_responses else base - levels[(sp, voc)]
+        y = y * (10 ** (gain / 20))
         natural = len(y) / OUT_SR
         if args.response_seconds > 0:
             y = fit_length(y, args.response_seconds)
         responses[(sp, voc)] = y
         sources[(sp, voc)] = str(path)
         tag = "" if specific else "   WARNING: generic placeholder, no per-species clip found"
-        print(f"  {sp:10s} {voc:9s} <- {path.name} ({natural:.1f}s -> {len(y)/OUT_SR:.1f}s){tag}",
-              flush=True)
+        print(f"  {sp:10s} {voc:9s} <- {path.name:24s} {levels[(sp, voc)]:6.1f} dB {gain:+5.1f} "
+              f"-> {_rms_db(y):6.1f} dB  ({natural:.1f}s -> {len(y)/OUT_SR:.1f}s){tag}", flush=True)
 
     specs = [mel_image(s) for s in birds]
     logs = [decision_lines(i, d["sci"] or "no match", d.get("species"), d["voc"] or "-",
