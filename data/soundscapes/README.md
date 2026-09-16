@@ -164,9 +164,11 @@ of call sounded different depending on the bird. The target is the median of the
 | Alarm/distress call | +2 dB | -15.7 dB | within 0.09 dB |
 | Contact call | -3 dB | -20.7 dB | within 0.09 dB |
 | Mating signal | -3 dB | -20.7 dB | within 0.06 dB |
-| Juvenile begging | -8 dB | -25.7 dB | within 0.08 dB |
+| Juvenile begging | -11 dB | -28.7 dB | within 0.08 dB |
 
-Alarm ends up 10.0 dB above juvenile and 5.0 dB above the other two; peak -1.1 dB.
+Alarm ends up 13.0 dB above juvenile and 5.0 dB above the other two; peak -1.1 dB.
+Juvenile was taken down twice at the artist's request; at -28.7 dB it is deliberately
+faint, and on a small speaker with little deep-bass response it may be barely there.
 
 The literal request was alarm +3 / juvenile -7, but that peaked at -0.1 dB on the tawny
 owl alarm - no headroom, so any downstream boost or speaker processing could distort it.
