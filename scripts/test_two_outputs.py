@@ -46,6 +46,20 @@ def list_devices() -> None:
             print(f"{i:>3}  {d['max_output_channels']:>7}  {d['name']}")
 
 
+def other_copies() -> list[int]:
+    """Other processes already running this script. Two copies play the same audio at
+    different offsets, which doubles the narration and lays one copy's translation over
+    the other's analysis page — it sounds like a fault in the video, and isn't."""
+    import os, subprocess
+    try:
+        out = subprocess.run(["pgrep", "-f", "test_two_outputs.py"],
+                             capture_output=True, text=True).stdout.split()
+    except (FileNotFoundError, OSError):
+        return []
+    mine = {os.getpid(), os.getppid()}
+    return [int(pid) for pid in out if pid.isdigit() and int(pid) not in mine]
+
+
 def dev_name(idx: int | None) -> str:
     """Name of a device index, or of whatever macOS/Linux is currently sending sound to."""
     import sounddevice as sd
@@ -99,12 +113,20 @@ def main() -> None:
     p.add_argument("--mix", action="store_true", help="sum left+right into both ears (for headphones)")
     p.add_argument("--no_video", action="store_true", help="audio only, no window")
     p.add_argument("--scale", type=float, default=0.75, help="window size, 1.0 = full 1280x720")
+    p.add_argument("--force", action="store_true", help="start even if another copy is running")
     args = p.parse_args()
 
     if args.list:
         list_devices(); return
     if not (args.main and args.bass):
         raise SystemExit("need --main and --bass (or --list to see the devices)")
+    others = other_copies()
+    if others and not args.force:
+        raise SystemExit(
+            f"already running (process {', '.join(map(str, others))}). Two copies play the "
+            f"same audio at different points, which doubles the narration and overlaps the "
+            f"translations — stop the other one first:\n    pkill -f test_two_outputs.py\n"
+            f"or pass --force if you really want both.")
 
     import sounddevice as sd
     import pandas as pd
