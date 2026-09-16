@@ -48,7 +48,7 @@ SOUNDING = 1e-4          # above this counts as "the clip is playing", not padde
 
 # on-screen names: juvenile = "Juvenile begging", call = "Contact call",
 # song = "Mating signal", alarm = "Alarm/distress call"
-GAIN_DB = {"juvenile": -11.0, "call": -3.0, "song": -3.0, "alarm": +2.0}
+GAIN_DB = {"juvenile": -16.0, "call": -3.0, "song": -3.0, "alarm": +2.0}
 # Widened 2026-09-16 at the artist's request (alarm bassier, juvenile weaker). The whole
 # set sits 1 dB lower than the literal +3/-7 asked for: that version peaked at -0.1 dB on
 # the tawny owl alarm, i.e. no headroom at all. Contrast is identical either way — alarm
