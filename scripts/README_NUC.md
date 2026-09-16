@@ -155,10 +155,22 @@ recovers.
 
 ### Bass on a Bluetooth speaker (optional)
 
-The sound artist's low-frequency ambience (`data/soundscapes/bass_ambience.flac`, all of
-it below 250 Hz) can loop on a Bluetooth speaker while the video and birds carry on
-through the headphone jack. It's an ambient bed, so it loops on its own (every 3:58) and
-doesn't need to line up with the birds.
+The bass track (`data/soundscapes/bass_track.flac`) plays on a Bluetooth speaker while
+the video and birds carry on through the headphone jack. It is the same 8:00 length as the
+video and silent during every analysis page, so bass is heard only under a translation.
+Both start together and so stay in step; if the speaker connects late or drops out, the
+bass restarts at the video's current position, not from the beginning.
+
+You can check the whole two-output arrangement on any machine before touching the NUC —
+headphones standing in for the wired speakers, plus a Bluetooth speaker:
+
+```bash
+python scripts/test_two_outputs.py --list
+python scripts/test_two_outputs.py --main "Headphones" --bass "<speaker name>"
+```
+
+It plays both, started together and looping, and prints what should be audible each
+second, so you can hear whether the bass only ever appears under a translation.
 
 1. Switch the speaker on and put it in pairing mode. On the NUC: **Menu → Bluetooth** →
    find the speaker → pair/connect.

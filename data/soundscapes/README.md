@@ -144,14 +144,27 @@ species/type wins. Real and shown values are both in `exhibition_v2_truth_final.
 **Don't quote the on-screen confidences as model performance** — the honest accuracy
 figures are the nested-CV ones (~0.80) in the project notes.
 
-## Bass ambience on Bluetooth (2026-09-15)
+## Bass on Bluetooth, timed to the translations (2026-09-16)
 
-`bass_ambience.flac` is the sound artist's `Low frequency ambience.wav` (242.4s, 100% of its
-energy below 250 Hz) made into a seamless loop: the last 4s are crossfaded over the first
-(equal-power), since the source starts louder than it ends and a plain loop would jump.
-Result 238.4s, lossless FLAC — not AAC, whose start/end padding re-breaks the seam
-(measured: a tick at every loop). Rebuild with `python -m src.render_bass_loop --src <wav>`.
+`bass_track.flac` is the sound artist's 12 numbered bass clips (`1.wav`..`12.wav`, in the
+running order) laid onto one 480s track that matches the video exactly: **silence through
+every 20s analysis page, the matching bass through every 20s translation**. So the bass is
+heard only under a translation, never over the loading page. Built with
+`python -m src.render_bass_track --bass_dir <folder>`; verified silent (RMS 0.000000) in
+all 12 analysis windows and sounding in all 12 translation windows.
 
-It plays on a Bluetooth speaker alongside the video when `kiosk_play.sh` is given
-`BASS_BT_MAC` (setup in `scripts/README_NUC.md`). It loops independently of the 8:00
-video — as an ambient bed it doesn't need to line up with the birds.
+Clip 11 (blackbird alarm) is 12.4s against a 20s window, so it leaves 7.6s of silence at
+the end of its slot; clips slightly over 20s are trimmed with a fade.
+
+It plays on a Bluetooth speaker when `kiosk_play.sh` is given `BASS_BT_MAC` (setup in
+`scripts/README_NUC.md`). Because it is the same length as the video and both start
+together, they stay in step; if the speaker connects late or drops out, the bass restarts
+at the video's CURRENT position rather than from the beginning. `BASS_LEAD_S` (default
+0.2s) starts it slightly early to offset Bluetooth's lag.
+
+Superseded: `bass_ambience.flac` (a continuous 3:58 bed made from `Low frequency
+ambience.wav`) and `src/render_bass_loop.py` — removed once the real, per-translation bass
+clips arrived. Both are recoverable from git history.
+
+To check the two outputs on any machine, with headphones and a Bluetooth speaker and no
+NUC: `python scripts/test_two_outputs.py --list`, then `--main <headphones> --bass <speaker>`.

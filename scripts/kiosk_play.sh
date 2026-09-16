@@ -11,10 +11,15 @@
 # Set AUDIO_DEVICE to pin the video's sound (e.g. the 3.5mm jack rather than a monitor's
 # HDMI speakers) — list the names with:  mpv --audio-device=help
 #
-# BASS_BT_MAC (optional) is a paired Bluetooth speaker's address. When set, the bass
-# ambience (data/soundscapes/bass_ambience.flac) loops on that speaker alongside the video,
-# and the video is kept on the headphone jack — otherwise Linux tends to make a newly
-# connected Bluetooth speaker the default output and pull the video's sound onto it too.
+# BASS_BT_MAC (optional) is a paired Bluetooth speaker's address. When set, the bass track
+# (data/soundscapes/bass_track.flac) plays on that speaker alongside the video, and the
+# video is kept on the headphone jack — otherwise Linux tends to make a newly connected
+# Bluetooth speaker the default output and pull the video's sound onto it too.
+#
+# The bass track is the same length as the video and silent during every analysis page, so
+# bass is heard ONLY under a translation. It is started at the video's current position
+# (not from the beginning), so a speaker that connects late or drops out mid-show comes
+# back in the right place. BASS_LEAD_S nudges it earlier to offset Bluetooth's lag.
 #
 # When launched by autostart (no terminal), everything is logged to
 # ~/.cache/bird-installation.log — read it with:  cat ~/.cache/bird-installation.log
@@ -28,7 +33,8 @@ log "---- kiosk_play.sh starting ----"
 
 COUNTDOWN="${COUNTDOWN:-data/soundscapes/countdown.mp4}"
 VIDEO="${VIDEO:-data/soundscapes/exhibition_v2.mp4}"
-BASS="${BASS:-data/soundscapes/bass_ambience.flac}"
+BASS="${BASS:-data/soundscapes/bass_track.flac}"
+BASS_LEAD_S="${BASS_LEAD_S:-0.2}"      # Bluetooth plays late; start the bass this much early
 BASS_BT_MAC="$(printf '%s' "${BASS_BT_MAC:-}" | tr '[:lower:]' '[:upper:]')"
 
 # Right after boot the desktop's audio server can take a while to appear; if mpv starts
@@ -89,12 +95,19 @@ if [ "${SKIP_COUNTDOWN:-0}" != "1" ] && [ -f "$COUNTDOWN" ]; then
   mpv "${MPV_KIOSK[@]}" "$COUNTDOWN"
 fi
 
-# ---- the bass bed on the Bluetooth speaker ----
+# ---- the exhibition video (wired) ----
+log "exhibition loop"
+mpv --loop-file=inf "${MPV_KIOSK[@]}" "$VIDEO" &
+VIDEO_PID=$!
+VIDEO_START="$(date +%s)"
+
+# ---- the bass track (Bluetooth), held in step with the video ----
 bt_sink() {   # the speaker's output name, empty while it isn't connected
   pactl list short sinks 2>/dev/null |
     awk -v m="${BASS_BT_MAC//:/_}" '$2 ~ /bluez/ && index($2, m) {print $2; exit}'
 }
 bass_loop() {
+  local period="$1" sink offset pid
   bluetoothctl power on >/dev/null 2>&1
   while true; do
     sink="$(bt_sink)"
@@ -105,9 +118,12 @@ bass_loop() {
     fi
     # a speaker (re)connecting can grab the default output — put it back on the jack
     [ -n "$jack" ] && pactl set-default-sink "$jack"
-    log "bass: playing on $sink"
+    # start where the video is now, so a late or reconnecting speaker lands in step
+    offset="$(awk -v s="$VIDEO_START" -v n="$(date +%s)" -v p="$period" -v l="$BASS_LEAD_S" \
+              'BEGIN{o=(n-s+l)%p; if(o<0)o+=p; printf "%.2f", o}')"
+    log "bass: playing on $sink from ${offset}s"
     mpv --no-video --loop-file=inf --really-quiet --no-terminal \
-        --audio-device="pulse/$sink" "$BASS" &
+        --start="$offset" --audio-device="pulse/$sink" "$BASS" &
     pid=$!
     # If the speaker disappears, Linux moves the stream to the default output — the
     # headphone jack — so kill it at once rather than let bass leak into the wired speakers.
@@ -123,16 +139,17 @@ bass_loop() {
 
 if [ -n "$BASS_BT_MAC" ]; then
   if [ -f "$BASS" ]; then
+    period="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$BASS" 2>/dev/null)"
+    period="${period:-480}"
     set -m                                  # own process group, so one kill stops it all
-    bass_loop &
+    bass_loop "$period" &
     BASS_PID=$!
     set +m
-    trap 'kill -- -"$BASS_PID" 2>/dev/null' EXIT INT TERM
+    trap 'kill -- -"$BASS_PID" 2>/dev/null; kill "$VIDEO_PID" 2>/dev/null' EXIT INT TERM
   else
     log "WARNING bass file not found: $BASS"
   fi
 fi
 
-log "exhibition loop"
-mpv --loop-file=inf "${MPV_KIOSK[@]}" "$VIDEO"
+wait "$VIDEO_PID"
 log "video stopped"
