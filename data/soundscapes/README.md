@@ -153,6 +153,24 @@ heard only under a translation, never over the loading page. Built with
 `python -m src.render_bass_track --bass_dir <folder>`; verified silent (RMS 0.000000) in
 all 12 analysis windows and sounding in all 12 translation windows.
 
+**Levels are set in two steps** (artist's direction, 2026-09-16). First every clip is
+matched to the same loudness — as delivered they ranged over 4.0 dB, and within a single
+call type by up to 3.7 dB (blackbird contact call vs robin contact call), so the same kind
+of call sounded different depending on the bird. The target is the median of the twelve
+(−17.6 dB), so overall loudness barely moves. Then each call type is graded:
+
+| call type | grade | final level | the three birds |
+|---|---|---|---|
+| Alarm/distress call | +1 dB | −16.7 dB | within 0.09 dB |
+| Contact call | −2 dB | −19.7 dB | within 0.09 dB |
+| Mating signal | −2 dB | −19.7 dB | within 0.06 dB |
+| Juvenile begging | −5 dB | −22.7 dB | within 0.08 dB |
+
+Alarm ends up 6.0 dB above juvenile and 3.0 dB above the other two; peak is −2.1 dB, so
+nothing clips. Retune without touching anything else: `--gain_db juvenile=-7,alarm=+2`
+changes the grading, `--base_db` the level everything is matched to, and `--no_match`
+keeps the artist's own relative levels instead.
+
 **The 20s grid holds whatever length the clips are.** Each clip starts exactly on its
 window boundary; a longer one is trimmed with a fade, a shorter one leaves silence at the
 END of its slot, so a wrong-length clip can never shift the ones after it. Measured on the
