@@ -153,8 +153,21 @@ heard only under a translation, never over the loading page. Built with
 `python -m src.render_bass_track --bass_dir <folder>`; verified silent (RMS 0.000000) in
 all 12 analysis windows and sounding in all 12 translation windows.
 
-Clip 11 (blackbird alarm) is 12.4s against a 20s window, so it leaves 7.6s of silence at
-the end of its slot; clips slightly over 20s are trimmed with a fade.
+**The 20s grid holds whatever length the clips are.** Each clip starts exactly on its
+window boundary; a longer one is trimmed with a fade, a shorter one leaves silence at the
+END of its slot, so a wrong-length clip can never shift the ones after it. Measured on the
+built track: every clip starts within **0.2 ms** of its boundary, and no bass is audible in
+any analysis window. `render_bass_track.py` now asserts both, so a future set of clips
+can't quietly break it.
+
+Trailing gaps from clips shorter than 20s: 0.44s on clips 1, 2 and 6, 0.21s on 5, 0.13s on
+7, 0.02s on 9 — and **7.6s on clip 11** (blackbird alarm, 12.4s long), which is the only
+one big enough to hear as an early ending.
+
+One small mismatch worth knowing: the video's audio decodes to 480.003s against the bass
+track's exact 480.000s (128 samples of AAC padding), so across a whole day of looping the
+two can creep about 0.2s apart from that alone — well under the drift between two separate
+audio clocks, and it resets whenever the NUC restarts.
 
 It plays on a Bluetooth speaker when `kiosk_play.sh` is given `BASS_BT_MAC` (setup in
 `scripts/README_NUC.md`). Because it is the same length as the video and both start

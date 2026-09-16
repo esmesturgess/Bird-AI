@@ -8,8 +8,10 @@ running order (1 = the first segment of the video, 2 = the second, and so on).
 Because it is the same length as the video, the two stay lined up when both are started
 together — the video (and birds) on the headphone jack, this on a Bluetooth speaker.
 
-Clips longer than the translation window are trimmed with a fade; shorter ones start with
-the translation and leave silence at the end of the window.
+THE GRID IS FIXED, WHATEVER LENGTH THE CLIPS ARE. Every clip starts exactly on its 20s
+boundary; a clip longer than the window is trimmed with a fade, a shorter one leaves
+silence at the END of its slot. A wrong-length clip can therefore never shift the ones
+after it. This is checked, not assumed — see the assertions at the end.
 
     python -m src.render_bass_track \
         --bass_dir <folder of 1.wav ... 12.wav> \
@@ -27,6 +29,7 @@ import pandas as pd
 SR = 44100
 FADE_IN_S = 0.02
 TRIM_FADE_S = 0.5
+AUDIBLE = 1e-5
 
 
 def fit_window(y: np.ndarray, n: int) -> np.ndarray:
@@ -53,6 +56,7 @@ def main() -> None:
     truth = pd.read_csv(args.truth)
     total = float(truth.response_start_s.iloc[-1] + truth.response_duration_s.iloc[-1])
     track = np.zeros((int(round(total * SR)), 2), dtype=np.float32)
+    windows = []
 
     for row in truth.itertuples():
         src = args.bass_dir / f"{row.segment + 1}.wav"      # clips are numbered from 1
@@ -64,7 +68,10 @@ def main() -> None:
             y = np.repeat(y, 2, axis=1)
         natural = len(y) / SR
         start, n = int(round(row.response_start_s * SR)), int(round(row.response_duration_s * SR))
+        assert start + n <= len(track), f"segment {row.segment} runs past the end of the track"
+        assert not windows or start >= windows[-1][1], f"segment {row.segment} overlaps the previous one"
         track[start:start + n] = fit_window(y.astype(np.float32), n)
+        windows.append((start, start + n))
         note = "trimmed" if natural > row.response_duration_s + 0.01 else (
                f"{row.response_duration_s - natural:.1f}s silence at the end"
                if natural < row.response_duration_s - 0.01 else "exact")
@@ -72,10 +79,24 @@ def main() -> None:
               f"{src.name:7s} {natural:5.2f}s -> {row.response_start_s:5.0f}-"
               f"{row.response_start_s + row.response_duration_s:5.0f}s  ({note})", flush=True)
 
+    # --- prove the grid held, rather than trusting that it did ---
+    loud = np.abs(track).max(axis=1)
+    worst_ms = 0.0
+    for (start, end), row in zip(windows, truth.itertuples()):
+        nz = np.nonzero(loud[start:end] > AUDIBLE)[0]
+        assert len(nz), f"segment {row.segment + 1} has no bass in its window"
+        worst_ms = max(worst_ms, nz[0] / SR * 1000)
+    for row in truth.itertuples():                            # analysis pages must be silent
+        a = int(round(row.bird_start_s * SR))
+        b = a + int(round(row.bird_duration_s * SR))
+        assert loud[a:b].max() <= AUDIBLE, f"bass leaks into segment {row.segment + 1}'s analysis page"
+    assert len(track) == int(round(total * SR)), "track length drifted from the video's"
+
     args.out.parent.mkdir(parents=True, exist_ok=True)
     sf.write(str(args.out), track, SR, format="FLAC", subtype="PCM_16")
-    peak = float(np.abs(track).max())
-    print(f"\nwrote {args.out}  ({len(track)/SR/60:.2f} min, peak {peak:.2f}, "
+    print(f"\nalignment checked: every clip starts within {worst_ms:.1f} ms of its 20s boundary, "
+          f"and no bass sounds during any analysis page")
+    print(f"wrote {args.out}  ({len(track)/SR/60:.2f} min, peak {float(np.abs(track).max()):.2f}, "
           f"{args.out.stat().st_size/1e6:.1f} MB)")
 
 
