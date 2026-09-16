@@ -58,8 +58,18 @@ gsettings set org.cinnamon.settings-daemon.plugins.power sleep-display-ac 0 2>/d
 
 [ -f "$VIDEO" ] || { log "video not found: $VIDEO"; exit 1; }
 
-# ---- keep the video on the headphone jack when a Bluetooth speaker is involved ----
-jack_sink() { pactl list short sinks 2>/dev/null | awk '$2 ~ /analog/ {print $2; exit}'; }
+# ---- keep the video on the WIRED output when a Bluetooth speaker is involved ----
+# Don't look for a name like "analog": a USB speaker is called something else entirely, and
+# when the guess fails the video falls back to the default output — which a Bluetooth
+# speaker takes over at boot, sending EVERYTHING to the bass speaker. So: pick any sink
+# that is not the Bluetooth one, preferring analog, then USB, never HDMI.
+jack_sink() {
+  local sinks; sinks="$(pactl list short sinks 2>/dev/null | awk '$2 !~ /bluez/ {print $2}')"
+  printf '%s\n' "$sinks" | grep -m1 -i analog && return 0
+  printf '%s\n' "$sinks" | grep -m1 -i usb    && return 0
+  printf '%s\n' "$sinks" | grep -vi hdmi | grep -m1 . && return 0
+  printf '%s\n' "$sinks" | grep -m1 .
+}
 jack=""
 if [ -n "$BASS_BT_MAC" ]; then
   # At boot the audio server answers BEFORE the built-in sound card has registered its
@@ -67,15 +77,21 @@ if [ -n "$BASS_BT_MAC" ]; then
   # speaker when it connected (worked when run by hand, failed from autostart). Wait for
   # the jack properly, then make it the DEFAULT as well as pinning the video to it, so
   # nothing can drift onto the speaker.
-  for _ in $(seq 1 30); do jack="$(jack_sink)"; [ -n "$jack" ] && break; sleep 1; done
+  if [ -n "${MAIN_DEVICE:-}" ]; then                    # explicit override wins
+    AUDIO_DEVICE="$MAIN_DEVICE"; jack="${MAIN_DEVICE#pulse/}"
+  else
+    for _ in $(seq 1 30); do jack="$(jack_sink)"; [ -n "$jack" ] && break; sleep 1; done
+  fi
   if [ -n "$jack" ]; then
     pactl set-default-sink "$jack"
     [ -z "${AUDIO_DEVICE:-}" ] && AUDIO_DEVICE="pulse/$jack"
     log "headphone jack: $jack (video pinned to it, and made the default output)"
   else
-    log "WARNING no headphone-jack output after 30s — video will use the default. Outputs seen:"
-    pactl list short sinks
+    log "WARNING no wired output after 30s — video will use the default, which a Bluetooth"
+    log "        speaker may have taken over. Set one explicitly with MAIN_DEVICE=pulse/<name>."
   fi
+  log "outputs the machine can see:"
+  pactl list short sinks 2>/dev/null | sed 's/^/        /'
 fi
 log "video audio device: ${AUDIO_DEVICE:-system default}"
 
