@@ -180,11 +180,38 @@ headphones that puts the birds in your left ear only, and leaves the left ear si
 through every translation — which sounds like the birds have disappeared. `--mix` sums
 both sides into both ears; leave it off when you want to check the split itself.
 
-1. Switch the speaker on and put it in pairing mode. On the NUC: **Menu → Bluetooth** →
-   find the speaker → pair/connect.
-2. Get its address — in a terminal: `bluetoothctl devices`. You'll see a line like
-   `Device AA:BB:CC:DD:EE:FF Speaker Name`; the `AA:BB:...` part is the address.
-3. Let it reconnect by itself after every boot: `bluetoothctl trust AA:BB:CC:DD:EE:FF`.
+**Pairing a speaker from scratch.** First make sure Linux can do Bluetooth audio at all —
+without this package no speaker will ever appear as an output, however well it pairs:
+
+```bash
+sudo apt install -y libspa-0.2-bluetooth      # PipeWire (Mint 21.3+/22)
+systemctl --user restart wireplumber pipewire # or just reboot
+```
+
+Then switch the speaker on, put it in pairing mode, and:
+
+```bash
+bluetoothctl
+power on
+agent on
+default-agent
+scan on                      # wait for your speaker to appear, note its address
+pair AA:BB:CC:DD:EE:FF
+trust AA:BB:CC:DD:EE:FF      # so it reconnects by itself after every boot
+connect AA:BB:CC:DD:EE:FF
+scan off
+exit
+```
+
+`trust` is the step people skip, and it's the one that makes it come back on its own after
+a power cut. Check the speaker is a real audio output now:
+
+```bash
+pactl list short sinks | grep bluez          # a bluez_output... line means it worked
+bluetoothctl devices                         # lists addresses if you lose the one above
+```
+
+If no `bluez` line appears, the package above is missing or WirePlumber needs restarting.
 4. Test it: `BASS_BT_MAC=AA:BB:CC:DD:EE:FF bash scripts/kiosk_play.sh` — bass should come
    from the Bluetooth speaker only, video and birds from the wired speakers only.
 5. Make it permanent: `BASS_BT_MAC=AA:BB:CC:DD:EE:FF bash scripts/install_autostart.sh`
