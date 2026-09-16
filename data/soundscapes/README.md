@@ -157,17 +157,17 @@ all 12 analysis windows and sounding in all 12 translation windows.
 matched to the same loudness - as delivered they ranged over 4.0 dB, and within a single
 call type by up to 3.7 dB (blackbird contact call vs robin contact call), so the same kind
 of call sounded different depending on the bird. The target is the median of the twelve
-(-17.6 dB). Then each call type is graded, to a deliberate 10 dB spread:
+(-17.6 dB). Then each call type is graded, to a deliberate 18 dB spread:
 
 | call type | grade | final level | the three birds |
 |---|---|---|---|
 | Alarm/distress call | +2 dB | -15.7 dB | within 0.09 dB |
-| Contact call | -5 dB | -22.7 dB | within 0.09 dB |
-| Mating signal | -3 dB | -20.7 dB | within 0.06 dB |
+| Contact call | -8 dB | -25.7 dB | within 0.09 dB |
+| Mating signal | -5 dB | -22.7 dB | within 0.06 dB |
 | Juvenile begging | -16 dB | -33.7 dB | within 0.08 dB |
 
-Alarm ends up 18.0 dB above juvenile, 7.0 dB above contact call and 5.0 dB above
-mating signal; peak -1.1 dB.
+Alarm ends up 18.0 dB above juvenile, 10.0 dB above contact call and 7.0 dB above
+mating signal; peak -1.1 dB. The grading was tightened over several passes by ear.
 Juvenile was taken down three times at the artist's request, to the point where there is
 deliberately barely any bass under a begging chick - a trace rather than a presence. At
 -33.7 dB it will be inaudible on a small speaker and only just there on a large one; that
