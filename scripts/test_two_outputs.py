@@ -9,6 +9,9 @@ the audio, so what you see is always what you are hearing.
     python scripts/test_two_outputs.py --main "External Headphones" --bass "JBL"
     python scripts/test_two_outputs.py --main "External Headphones" --bass "JBL" --mix
 
+--bass none plays no separate bass stream, for the single-file fallback
+(exhibition_v2_allinone.mp4) where the bass is already mixed in.
+
 --main/--bass take a device number from --list, any part of its name, or the word
 `default`, meaning whatever the system's sound settings are currently sending audio to.
 On macOS, picking a Bluetooth speaker by name sometimes opens without error yet produces
@@ -120,6 +123,7 @@ def main() -> None:
         list_devices(); return
     if not (args.main and args.bass):
         raise SystemExit("need --main and --bass (or --list to see the devices)")
+    bass_off = args.bass.strip().lower() == "none"   # everything is in the one file
     others = other_copies()
     if others and not args.force:
         raise SystemExit(
@@ -131,11 +135,12 @@ def main() -> None:
     import sounddevice as sd
     import pandas as pd
 
-    main_audio, bass_audio = load_audio(args.main_file), load_audio(args.bass_file)
+    main_audio = load_audio(args.main_file)
+    bass_audio = None if bass_off else load_audio(args.bass_file)
     if args.mix:                                      # both ears hear everything
         mono = main_audio.mean(axis=1, keepdims=True)
         main_audio = np.repeat(mono, 2, axis=1).astype(np.float32)
-    if abs(len(main_audio) - len(bass_audio)) > SR:
+    if bass_audio is not None and abs(len(main_audio) - len(bass_audio)) > SR:
         print(f"WARNING the two tracks are different lengths "
               f"({len(main_audio)/SR:.1f}s vs {len(bass_audio)/SR:.1f}s) — they will drift apart",
               file=sys.stderr)
@@ -159,14 +164,18 @@ def main() -> None:
                 pos[key] += frames
         return cb
 
-    main_dev, bass_dev = pick(args.main), pick(args.bass)
+    main_dev = pick(args.main)
     streams = [sd.OutputStream(device=main_dev, samplerate=SR, channels=2,
-                               callback=make_cb("main", main_audio)),
-               sd.OutputStream(device=bass_dev, samplerate=SR, channels=2,
-                               callback=make_cb("bass", bass_audio))]
+                               callback=make_cb("main", main_audio))]
     print(f"main : {dev_name(main_dev)}  <- birds, narration, translations"
           f"{' (mixed to both ears)' if args.mix else ' (birds LEFT, translations RIGHT)'}")
-    print(f"bass : {dev_name(bass_dev)}  <- bass only, under translations")
+    if bass_off:
+        print("bass : none — everything is in the one file (single-speaker fallback)")
+    else:
+        bass_dev = pick(args.bass)
+        streams.append(sd.OutputStream(device=bass_dev, samplerate=SR, channels=2,
+                                       callback=make_cb("bass", bass_audio)))
+        print(f"bass : {dev_name(bass_dev)}  <- bass only, under translations")
     print("\nBluetooth runs ~0.1-0.3s behind a wired output; a small, steady lag is expected.")
 
     def phase_at(t: float) -> str:
