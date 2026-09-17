@@ -134,15 +134,24 @@ bt_sink() {   # the speaker's output name, empty while it isn't connected
     awk -v m="${BASS_BT_MAC//:/_}" '$2 ~ /bluez/ && index($2, m) {print $2; exit}'
 }
 bass_loop() {
-  local period="$1" sink offset pid
+  local period="$1" sink offset pid tries=0
   bluetoothctl power on >/dev/null 2>&1
   while true; do
     sink="$(bt_sink)"
     if [ -z "$sink" ]; then                 # (re)connect — speakers drop out, get switched off
       bluetoothctl connect "$BASS_BT_MAC" >/dev/null 2>&1
+      tries=$((tries + 1))
+      if [ "$tries" = 6 ]; then
+        log "bass: STILL no speaker after 30s. Checks: is it switched on and in range?"
+        log "        is $BASS_BT_MAC the right address (bluetoothctl devices)?"
+        log "        is it paired AND trusted (bluetoothctl info $BASS_BT_MAC)?"
+        log "        is libspa-0.2-bluetooth installed? Outputs visible right now:"
+        pactl list short sinks 2>/dev/null | sed 's/^/        /'
+      fi
       sleep 5
       continue
     fi
+    tries=0
     # a speaker (re)connecting can grab the default output — put it back on the jack
     [ -n "$jack" ] && pactl set-default-sink "$jack"
     # start where the video is now, so a late or reconnecting speaker lands in step
@@ -164,6 +173,10 @@ bass_loop() {
   done
 }
 
+if [ -z "$BASS_BT_MAC" ]; then
+  log "no BASS_BT_MAC set — the bass speaker is NOT being used; all sound goes to the wired"
+  log "        output. Pass the speaker's address: BASS_BT_MAC=AA:BB:CC:DD:EE:FF bash $0"
+fi
 if [ -n "$BASS_BT_MAC" ]; then
   if [ -f "$BASS" ]; then
     period="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$BASS" 2>/dev/null)"
