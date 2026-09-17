@@ -153,6 +153,19 @@ the installer with the jack's name, e.g.
 rather than a fixed pause — starting before it is up gives a silent video that never
 recovers.
 
+### Which file to play
+
+| setup | command |
+|---|---|
+| **Normal** — all sound on the wired speaker, bass on Bluetooth | `BASS_BT_MAC=... bash scripts/kiosk_play.sh` |
+| Two wired speakers, birds outside / translations inside the nest | `VIDEO=data/soundscapes/exhibition_v2.mp4 BASS_BT_MAC=... bash scripts/kiosk_play.sh` |
+| **Fallback** — wired speaker has failed; everything out of the Bluetooth one | `VIDEO=data/soundscapes/exhibition_v2_allinone.mp4 MAIN_DEVICE=pulse/<bluetooth-sink> bash scripts/kiosk_play.sh` |
+
+The normal setup is the default, so `BASS_BT_MAC` is the only thing you have to pass. In
+the fallback, do NOT pass `BASS_BT_MAC` — the bass is already mixed into that file, and
+passing it would play the bass twice. Get the Bluetooth sink name from
+`bash scripts/which_output.sh`.
+
 ### Bass on a Bluetooth speaker (optional)
 
 The bass track (`data/soundscapes/bass_track.flac`) plays on a Bluetooth speaker while

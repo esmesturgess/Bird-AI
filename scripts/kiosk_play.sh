@@ -11,6 +11,17 @@
 # Set AUDIO_DEVICE to pin the video's sound (e.g. the 3.5mm jack rather than a monitor's
 # HDMI speakers) — list the names with:  mpv --audio-device=help
 #
+# THREE SETUPS:
+#   1. DEFAULT — everything (birds, narration, translations) on the wired speaker, bass on
+#      the Bluetooth speaker. Nothing to pass but the speaker's address:
+#          BASS_BT_MAC=AA:BB:CC:DD:EE:FF bash scripts/kiosk_play.sh
+#   2. TWO WIRED SPEAKERS — birds outside the nest, translations inside, bass on Bluetooth:
+#          VIDEO=data/soundscapes/exhibition_v2.mp4 BASS_BT_MAC=... bash scripts/kiosk_play.sh
+#   3. FALLBACK, if the wired speaker fails — every sound including bass in one file, out of
+#      one speaker, no routing at all (note: NO BASS_BT_MAC, the bass is already in the file):
+#          VIDEO=data/soundscapes/exhibition_v2_allinone.mp4 MAIN_DEVICE=pulse/<bluetooth-sink> \
+#            bash scripts/kiosk_play.sh
+#
 # BASS_BT_MAC (optional) is a paired Bluetooth speaker's address. When set, the bass track
 # (data/soundscapes/bass_track.flac) plays on that speaker alongside the video, and the
 # video is kept on the headphone jack — otherwise Linux tends to make a newly connected
@@ -32,7 +43,7 @@ log() { printf '%s  %s\n' "$(date '+%F %T')" "$*"; }
 log "---- kiosk_play.sh starting ----"
 
 COUNTDOWN="${COUNTDOWN:-data/soundscapes/countdown.mp4}"
-VIDEO="${VIDEO:-data/soundscapes/exhibition_v2.mp4}"
+VIDEO="${VIDEO:-data/soundscapes/exhibition_v2_mono.mp4}"   # see the three setups above
 BASS="${BASS:-data/soundscapes/bass_track.flac}"
 BASS_LEAD_S="${BASS_LEAD_S:-0.2}"      # Bluetooth plays late; start the bass this much early
 BASS_BT_MAC="$(printf '%s' "${BASS_BT_MAC:-}" | tr '[:lower:]' '[:upper:]')"
