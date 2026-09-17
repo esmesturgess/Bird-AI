@@ -167,8 +167,13 @@ def main() -> None:
     main_dev = pick(args.main)
     streams = [sd.OutputStream(device=main_dev, samplerate=SR, channels=2,
                                callback=make_cb("main", main_audio))]
-    print(f"main : {dev_name(main_dev)}  <- birds, narration, translations"
-          f"{' (mixed to both ears)' if args.mix else ' (birds LEFT, translations RIGHT)'}")
+    # an already-mono file (the single-speaker fallback) has identical channels; saying
+    # "birds LEFT, translations RIGHT" about it would be plainly wrong
+    already_mono = bool(np.allclose(main_audio[:, 0], main_audio[:, 1]))
+    split = ("mixed to both ears" if args.mix else
+             "already one channel — everything on both sides" if already_mono else
+             "birds LEFT, translations RIGHT")
+    print(f"main : {dev_name(main_dev)}  <- birds, narration, translations ({split})")
     if bass_off:
         print("bass : none — everything is in the one file (single-speaker fallback)")
     else:
